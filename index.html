@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Robert Romany | Android Developer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/devicons/devicon@v2.15.1/devicon.min.css">
+    <script src="https://unpkg.com/feather-icons"></script>
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>👨‍💻</text></svg>">
+</head>
+<body class="relative">
+
+    <div id="bg-layer-1" class="absolute top-0 left-0 z-[-1] h-full w-full transition-opacity duration-500"></div>
+    <div id="bg-layer-2" class="absolute top-0 left-0 z-[-1] h-full w-full transition-opacity duration-500"></div>
+
+    <nav id="navbar" class="fixed w-full z-30 top-0 transition-colors duration-500">
+        <div class="container mx-auto px-6 py-4 flex justify-between items-center">
+            <a href="#" id="nav-logo" class="text-2xl font-bold transition-colors duration-500">Robert Romany</a>
+            <div class="hidden md:flex items-center space-x-8">
+                <a href="#hero" class="nav-link transition-colors duration-500">Home</a>
+                <a href="#about" class="nav-link transition-colors duration-500">About</a>
+                <a href="#principles" class="nav-link transition-colors duration-500">Principles</a>
+                <a href="#skills" class="nav-link transition-colors duration-500">Skills</a>
+                <a href="#projects" class="nav-link transition-colors duration-500">Projects</a>
+                <a href="#contact" class="nav-link transition-colors duration-500">Contact</a>
+            </div>
+            <div class="flex items-center space-x-4">
+                <div id="theme-switcher" class="flex items-center space-x-2">
+                     <button class="theme-btn" data-theme="dark" title="Dark Mode"><i data-feather="moon"></i></button>
+                     <button class="theme-btn" data-theme="light" title="Light Mode"><i data-feather="sun"></i></button>
+                     <button class="theme-btn" data-theme="glass" title="Glassmorphism"><i data-feather="grid"></i></button>
+                </div>
+                <button id="login-btn" class="nav-link transition-colors duration-500">Admin Login</button>
+                <button id="logout-btn" class="hidden text-red-400 hover:text-red-500 transition">Logout</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mx-auto px-6">
+        <section id="hero" class="h-screen flex items-center pt-16">
+            <div class="text-center md:text-left w-full">
+                <div class="editable-container">
+                    <h1 id="hero-title" class="text-4xl md:text-6xl font-extrabold leading-tight transition-colors duration-500">
+                        Hi, I'm <span id="hero-name" class="transition-colors duration-500">Robert Romany</span>
+                    </h1>
+                     <button id="edit-hero-title-btn" class="edit-icon"><i data-feather="edit-2" class="w-5 h-5"></i></button>
+                </div>
+                <div class="editable-container mt-4">
+                    <p id="hero-subtitle" class="text-lg md:text-xl max-w-3xl mx-auto md:mx-0 transition-colors duration-500">
+                        An Android Developer crafting modern, high-performance, and user-centric mobile applications with Kotlin & Jetpack Compose.
+                    </p>
+                    <button id="edit-hero-subtitle-btn" class="edit-icon"><i data-feather="edit-2" class="w-5 h-5"></i></button>
+                </div>
+            </div>
+        </section>
+
+        <section id="about" class="py-16">
+            <div class="flex flex-col md:flex-row items-center justify-center gap-10 md:gap-16">
+                <div class="md:w-1/3 flex-shrink-0 relative editable-container">
+                    <img id="about-image" src="https://placehold.co/400x400/0f172a/22d3ee?text=RR" alt="Robert Romany" class="rounded-full w-60 h-60 md:w-72 md:h-72 object-cover mx-auto ring-4 transition-all duration-500 shadow-xl">
+                    <button id="edit-about-btn" class="edit-icon"><i data-feather="edit-2" class="w-5 h-5"></i></button>
+                </div>
+                <div class="md:w-2/3 text-center md:text-left">
+                    <h2 id="about-title" class="text-3xl font-bold mb-2 transition-colors duration-500">About Me</h2>
+                    <div id="about-underline" class="section-title-underline mb-6 mx-auto md:mx-0"></div>
+                    <p id="about-text" class="leading-relaxed transition-colors duration-500">
+                        A highly skilled Software Engineer with proven experience in building efficient, user-friendly, and modern Android applications. I specialize in Kotlin, Jetpack Compose, and Firebase, with a strong focus on performance, scalability, and clean architecture. I aim to deliver robust mobile experiences by leveraging modern tools and strategic implementation to solve practical challenges.
+                    </p>
+                </div>
+            </div>
+        </section>
+        
+        <section id="principles" class="py-16">
+            <div class="flex justify-center items-center text-center mb-12">
+                 <h2 id="principles-title" class="text-3xl font-bold transition-colors duration-500">Core Principles</h2>
+                 <button id="add-principle-btn" class="hidden ml-4 font-bold p-2 rounded-full transition"><i data-feather="plus"></i></button>
+            </div>
+            <div id="principles-underline" class="section-title-underline mb-12 mx-auto"></div>
+            <div id="principles-grid" class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+                 <div id="principles-loader" class="loader col-span-3"></div>
+            </div>
+        </section>
+
+        <section id="skills" class="py-16">
+            <div class="flex justify-center items-center text-center mb-12">
+                <h2 id="skills-title" class="text-3xl font-bold transition-colors duration-500">Technical Skills</h2>
+                <button id="add-skill-btn" class="hidden ml-4 font-bold p-2 rounded-full transition"><i data-feather="plus"></i></button>
+            </div>
+            <div id="skills-underline" class="section-title-underline mb-12 mx-auto"></div>
+            <div id="skills-container" class="max-w-4xl mx-auto flex flex-wrap justify-center items-center gap-x-10 gap-y-8">
+                <div id="skills-loader" class="loader"></div>
+            </div>
+        </section>
+
+        <section id="projects" class="py-16">
+            <div class="flex justify-between items-center mb-10">
+                 <h2 id="projects-title" class="text-3xl font-bold transition-colors duration-500">Projects</h2>
+                 <button id="add-project-btn" class="hidden font-bold py-2 px-4 rounded-lg transition">
+                    + Add Project
+                </button>
+            </div>
+            <div id="projects-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div id="projects-loader" class="loader"></div>
+            </div>
+        </section>
+        
+         <section id="contact" class="py-16 text-center">
+            <h2 id="contact-title" class="text-3xl font-bold mb-2 transition-colors duration-500">Get In Touch</h2>
+            <div id="contact-underline" class="section-title-underline mb-8 mx-auto"></div>
+            <p id="contact-text" class="text-lg max-w-2xl mx-auto mb-8 transition-colors duration-500">
+                I'm always excited to discuss new projects or opportunities. Feel free to reach out!
+            </p>
+            <div class="flex flex-col items-center justify-center space-y-4">
+                <div id="email-container" class="flex flex-col md:flex-row items-center justify-center md:justify-start rounded-lg p-3 transition-colors duration-500">
+                    <span id="email-text" class="text-base md:text-lg font-mono transition-colors duration-500 break-all">robert.romany.dev@gmail.com</span>
+                    <button id="copy-email-btn" class="w-full justify-center md:w-auto mt-3 md:mt-0 md:ml-4 p-3 rounded-lg flex items-center font-semibold transition-colors duration-500">
+                        <i data-feather="copy" class="w-5 h-5"></i> 
+                        <span id="copy-btn-text" class="ml-2">Copy</span>
+                    </button>
+                </div>
+                <p id="copy-success-msg" class="text-green-400 h-5 -mt-2 transition-opacity opacity-0">Copied to clipboard!</p>
+                <a id="mailto-btn" href="mailto:robert.romany.dev@gmail.com" class="font-bold py-3 px-8 rounded-lg transition text-lg flex items-center space-x-2">
+                    <i data-feather="mail" class="w-5 h-5"></i>
+                    <span>Email Me Directly</span>
+                </a>
+            </div>
+        </section>
+    </div>
+    
+    <footer id="footer" class="border-t mt-16 transition-colors duration-500">
+        <div class="container mx-auto px-6 py-4 text-center">
+            <p>&copy; <span id="year"></span> | Designed & Built by Robert Romany Elshahat.</p>
+        </div>
+    </footer>
+
+
+    <div id="login-modal" class="modal-overlay hidden fixed inset-0 bg-black bg-opacity-70 z-40 flex items-center justify-center">
+        <div class="modal-content p-8 rounded-lg shadow-xl w-full max-w-sm transform scale-95">
+             <h3 class="text-2xl font-bold mb-4">Admin Login</h3>
+            <form id="login-form">
+                <input type="email" id="email" placeholder="Email" class="modal-input w-full p-3 rounded-lg mb-4 focus:outline-none focus:ring-2" required>
+                <input type="password" id="password" placeholder="Password" class="modal-input w-full p-3 rounded-lg mb-4 focus:outline-none focus:ring-2" required>
+                <button type="submit" id="login-submit-btn" class="w-full text-white font-bold py-3 px-4 rounded-lg transition">Login</button>
+                <p id="login-error" class="text-red-400 text-sm mt-2 text-center"></p>
+            </form>
+        </div>
+    </div>
+
+     <div id="project-modal" class="modal-overlay hidden fixed inset-0 bg-black bg-opacity-70 z-40 flex items-center justify-center p-4">
+        <div class="modal-content p-8 rounded-lg shadow-xl w-full max-w-3xl transform scale-95 max-h-screen overflow-y-auto">
+            <h3 id="project-modal-title" class="text-2xl font-bold mb-6">Add New Project</h3>
+            <form id="project-form">
+                <input type="hidden" id="project-id">
+                <div class="grid grid-cols-1 gap-6">
+                    <input type="text" id="project-title" placeholder="Project Title" class="modal-input p-3 rounded-lg" required>
+                    <textarea id="project-description" placeholder="Project Description" class="modal-input p-3 rounded-lg h-32" required></textarea>
+                     <input type="url" id="project-thumbnail-url" placeholder="Thumbnail Image URL" class="modal-input p-3 rounded-lg" required>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Additional Images</label>
+                        <div id="additional-images-container" class="space-y-4"></div>
+                        <button type="button" id="add-image-btn" class="mt-4 font-semibold py-2 px-4 rounded-lg text-sm">Add Image</button>
+                    </div>
+                    <input type="text" id="project-tech" placeholder="Technologies (comma separated)" class="modal-input p-3 rounded-lg" required>
+                    <input type="url" id="project-source-link" placeholder="Source Code URL" class="modal-input p-3 rounded-lg">
+                    <input type="url" id="project-live-link" placeholder="Live/Google Play URL" class="modal-input p-3 rounded-lg">
+                </div>
+                <div class="flex justify-end space-x-4 mt-6">
+                    <button type="button" class="modal-close bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg">Cancel</button>
+                    <button type="submit" id="project-submit-btn" class="text-white font-bold py-2 px-4 rounded-lg flex items-center">
+                        <span id="project-submit-text">Save Project</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+     <div id="project-detail-modal" class="modal-overlay hidden fixed inset-0 bg-black bg-opacity-70 z-40 flex items-center justify-center p-4">
+        <div class="modal-content p-8 rounded-lg shadow-xl w-full max-w-4xl transform scale-95 max-h-screen flex flex-col">
+            <div class="flex-shrink-0 flex justify-between items-start mb-4">
+                 <h3 id="detail-title" class="text-3xl font-bold"></h3>
+                 <button class="modal-close text-3xl leading-none">&times;</button>
+            </div>
+            <div class="flex-grow overflow-y-auto pr-4 -mr-4">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div>
+                        <img id="detail-main-image" src="" alt="Main project image" class="w-full h-auto rounded-lg mb-4 bg-gray-700">
+                        <p id="detail-image-description" class="text-sm italic text-center h-5 mb-2"></p>
+                        <div id="detail-thumbnails" class="flex space-x-2 overflow-x-auto p-1"></div>
+                    </div>
+                    <div>
+                        <p id="detail-description" class="mb-6 leading-relaxed"></p>
+                        <h4 class="font-bold mb-2">Technologies Used:</h4>
+                        <div id="detail-tech" class="flex flex-wrap gap-2 mb-6"></div>
+                        <h4 class="font-bold mb-2">Links:</h4>
+                        <div id="detail-links" class="flex space-x-4"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="principle-modal" class="modal-overlay hidden fixed inset-0 bg-black bg-opacity-70 z-40 flex items-center justify-center p-4">
+        <div class="modal-content p-8 rounded-lg shadow-xl w-full max-w-lg transform scale-95">
+            <h3 id="principle-modal-title" class="text-2xl font-bold mb-6">Add New Principle</h3>
+            <form id="principle-form">
+                <input type="hidden" id="principle-id">
+                <div class="grid grid-cols-1 gap-6">
+                    <input type="text" id="principle-title" placeholder="Principle Title" class="modal-input p-3 rounded-lg" required>
+                    <textarea id="principle-description" placeholder="Description" class="modal-input p-3 rounded-lg h-24" required></textarea>
+                    <input type="text" id="principle-icon" placeholder="Feather Icon Name (e.g., zap)" class="modal-input p-3 rounded-lg" required>
+                </div>
+                <div class="flex justify-end space-x-4 mt-6">
+                    <button type="button" class="modal-close bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg">Cancel</button>
+                    <button type="submit" id="principle-submit-btn" class="text-white font-bold py-2 px-4 rounded-lg">Save Principle</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="skill-modal" class="modal-overlay hidden fixed inset-0 bg-black bg-opacity-70 z-40 flex items-center justify-center p-4">
+        <div class="modal-content p-8 rounded-lg shadow-xl w-full max-w-lg transform scale-95">
+            <h3 id="skill-modal-title" class="text-2xl font-bold mb-6">Add New Skill</h3>
+            <form id="skill-form">
+                <input type="hidden" id="skill-id">
+                <div class="grid grid-cols-1 gap-6">
+                    <input type="text" id="skill-name" placeholder="Skill Name (e.g., Kotlin)" class="modal-input p-3 rounded-lg" required>
+                    <input type="text" id="skill-icon-class" placeholder="Devicon Class (e.g., devicon-kotlin-plain)" class="modal-input p-3 rounded-lg" required>
+                    <p class="text-xs">Find icon classes on <a href="https://devicon.dev/" target="_blank" class="underline">devicon.dev</a></p>
+                </div>
+                <div class="flex justify-end space-x-4 mt-6">
+                    <button type="button" class="modal-close bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg">Cancel</button>
+                    <button type="submit" id="skill-submit-btn" class="text-white font-bold py-2 px-4 rounded-lg">Save Skill</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="about-modal" class="modal-overlay hidden fixed inset-0 bg-black bg-opacity-70 z-40 flex items-center justify-center p-4">
+        <div class="modal-content p-8 rounded-lg shadow-xl w-full max-w-lg transform scale-95">
+            <h3 class="text-2xl font-bold mb-6">Edit About Section</h3>
+            <form id="about-form">
+                <div class="grid grid-cols-1 gap-6">
+                    <textarea id="about-modal-text" placeholder="About me text" class="modal-input p-3 rounded-lg h-40" required></textarea>
+                     <input type="url" id="about-image-url" placeholder="Profile Image URL" class="modal-input p-3 rounded-lg" required>
+                </div>
+                <div class="flex justify-end space-x-4 mt-6">
+                    <button type="button" class="modal-close bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg">Cancel</button>
+                    <button type="submit" id="about-submit-btn" class="text-white font-bold py-2 px-4 rounded-lg flex items-center">
+                        <span id="about-submit-text">Save</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <div id="text-edit-modal" class="modal-overlay hidden fixed inset-0 bg-black bg-opacity-70 z-40 flex items-center justify-center p-4">
+        <div class="modal-content p-8 rounded-lg shadow-xl w-full max-w-lg transform scale-95">
+            <h3 id="text-edit-modal-title" class="text-2xl font-bold mb-6">Edit Text</h3>
+            <form id="text-edit-form">
+                 <input type="hidden" id="text-edit-doc">
+                 <input type="hidden" id="text-edit-field">
+                 <textarea id="text-edit-content" class="modal-input p-3 rounded-lg h-32 w-full" required></textarea>
+                <div class="flex justify-end space-x-4 mt-6">
+                    <button type="button" class="modal-close bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg">Cancel</button>
+                    <button type="submit" id="text-edit-submit-btn" class="text-white font-bold py-2 px-4 rounded-lg">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <script type="module" src="script.js"></script>
+</body>
+</html>
+
