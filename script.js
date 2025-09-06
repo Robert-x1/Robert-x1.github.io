@@ -380,7 +380,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }).join('');
 
             card.innerHTML = `
-                <img src="${project.thumbnail}" alt="${project.title}" class="w-full h-48 object-cover">
+                <img src="${project.thumbnail}" alt="${project.title}" class="w-full h-100 object-cover">
                 <div class="p-6">
                     <h3 class="font-bold text-xl mb-2">${project.title}</h3>
                     <div class="flex flex-wrap gap-2 mb-4">${techBadges}</div>
@@ -784,4 +784,5 @@ document.addEventListener('DOMContentLoaded', () => {
     applyTheme(savedTheme);
     loadAllData();
 });
+
 
