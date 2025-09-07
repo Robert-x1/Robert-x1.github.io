@@ -4,7 +4,7 @@ import { initializeAppCheck, ReCaptchaV3Provider } from "https://www.gstatic.com
 import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
 import { getFirestore, collection, getDocs, doc, setDoc, addDoc, updateDoc, deleteDoc, serverTimestamp, query, orderBy, writeBatch, getDoc } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 
- const firebaseConfig = {
+const firebaseConfig = {
     apiKey: "AIzaSyC9c5yk7Smmjk3PRJgJm24PmXJfr0XpBlc",
     authDomain: "robert-portfolio-98d71.firebaseapp.com",
     projectId: "robert-portfolio-98d71",
@@ -12,7 +12,7 @@ import { getFirestore, collection, getDocs, doc, setDoc, addDoc, updateDoc, dele
     messagingSenderId: "125447409289",
     appId: "1:125447409289:web:010585084cc2a0fe8ec058",
     measurementId: "G-FS62VLHDGH"
-  };
+};
 
 const app = initializeApp(firebaseConfig);
 const analytics = getAnalytics(app);
@@ -29,6 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const themes = {
         dark: {
+            cursorColor: '#22d3ee', // Cyan
             body: 'bg-gray-900 text-gray-200',
             bgLayer1: 'bg-gray-900 bg-[radial-gradient(#e5e7eb0f_1px,transparent_1px)] [background-size:16px_16px]',
             bgLayer1Fade: 'opacity-100',
@@ -57,6 +58,7 @@ document.addEventListener('DOMContentLoaded', () => {
             activeThumb: 'border-cyan-400',
         },
         light: {
+            cursorColor: '#0ea5e9', // Sky
             body: 'bg-gray-50 text-gray-800',
             bgLayer1: 'bg-white', bgLayer1Fade: 'opacity-100',
             bgLayer2: 'bg-[radial-gradient(circle_500px_at_50%_200px,rgba(14,165,233,0.1),transparent)]', bgLayer2Fade: 'opacity-100',
@@ -83,9 +85,11 @@ document.addEventListener('DOMContentLoaded', () => {
             activeThumb: 'border-sky-500',
         },
         glass: {
+            cursorColor: '#d946ef', // Fuchsia
             body: 'bg-gray-900 text-gray-200',
-            bgLayer1: 'bg-gradient-to-br from-gray-900 via-indigo-900 to-gray-900', bgLayer1Fade: 'opacity-100',
-            bgLayer2: 'bg-gray-900 bg-[radial-gradient(#e5e7eb0f_1px,transparent_1px)] [background-size:16px_16px]', bgLayer2Fade: 'opacity-50',
+            bgLayer1: 'bg-gray-900 bg-[radial-gradient(#e5e7eb0f_1px,transparent_1px)] [background-size:16px_16px]',
+            bgLayer2: 'bg-[radial-gradient(circle_500px_at_50%_200px,rgba(192,38,211,0.15),transparent)]',
+            bgLayer2Fade: 'opacity-50',
             navbar: 'bg-white/5 backdrop-blur-lg border-b border-white/10',
             navLogo: 'text-white',
             navLink: 'text-gray-300 hover:text-fuchsia-400',
@@ -112,6 +116,15 @@ document.addEventListener('DOMContentLoaded', () => {
     
     function applyTheme(themeName) {
         const theme = themes[themeName];
+        document.documentElement.style.setProperty('--cursor-color', theme.cursorColor);
+
+        // Add theme class to body for specific CSS rules
+        document.body.classList.remove('theme-dark', 'theme-light', 'theme-glass');
+        document.body.classList.add(`theme-${themeName}`);
+
+
+        document.getElementById('bg-layer-2').style.background = '';
+
         const setClasses = (elements, classes) => {
             if (!elements) return;
             const elementsNodeList = elements.length !== undefined ? elements : [elements];
@@ -122,7 +135,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 el.setAttribute('class', `${preservedClasses} ${classes}`.trim());
             });
         };
-
+        
         const allElements = {
             'body': document.body, '#bg-layer-1': document.getElementById('bg-layer-1'),
             '#bg-layer-2': document.getElementById('bg-layer-2'), '#navbar': document.getElementById('navbar'),
@@ -231,7 +244,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }, 2500);
         } catch (err) {
             console.error('Fallback: Oops, unable to copy', err);
-            alert('Could not copy email address.');
         }
         document.body.removeChild(textArea);
     });
@@ -283,7 +295,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
     }
-
 
     async function loadAllData() {
         try {
@@ -359,7 +370,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     window.renderProjects = function() {
-        const currentTheme = themes[localStorage.getItem('portfolioTheme') || 'light'];
+        const currentTheme = themes[localStorage.getItem('portfolioTheme') || 'dark'];
         const grid = document.getElementById('projects-grid');
         grid.innerHTML = '';
         if (projects.length === 0 && !isLoggedIn) {
@@ -373,7 +384,7 @@ document.addEventListener('DOMContentLoaded', () => {
             card.dataset.id = project.id;
 
             let techBadges = (project.technologies || []).map(tech => {
-                const isLight = (localStorage.getItem('portfolioTheme') || 'light') === 'light';
+                const isLight = (localStorage.getItem('portfolioTheme') || 'dark') === 'light';
                 const bgColor = isLight ? 'bg-gray-200' : 'bg-gray-700';
                 const textColor = isLight ? 'text-sky-800' : 'text-cyan-400';
                  return `<span class="${bgColor} ${textColor} text-xs font-semibold px-2.5 py-1 rounded-full">${tech}</span>`
@@ -385,7 +396,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <h3 class="font-bold text-xl mb-2">${project.title}</h3>
                     <div class="flex flex-wrap gap-2 mb-4">${techBadges}</div>
                     ${isLoggedIn ? `
-                    <div class="mt-4 pt-4 border-t ${ (localStorage.getItem('portfolioTheme') || 'light') === 'light' ? 'border-gray-200' : 'border-gray-700'} flex space-x-2">
+                    <div class="mt-4 pt-4 border-t ${ (localStorage.getItem('portfolioTheme') || 'dark') === 'light' ? 'border-gray-200' : 'border-gray-700'} flex space-x-2">
                         <button class="admin-btn edit-btn" onclick="event.stopPropagation(); handleEditProject('${project.id}')">Edit</button>
                         <button class="admin-btn delete-btn" onclick="event.stopPropagation(); handleDeleteProject('${project.id}')">Delete</button>
                     </div>
@@ -397,7 +408,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     };
     window.renderPrinciples = function() {
-        const currentTheme = themes[localStorage.getItem('portfolioTheme') || 'light'];
+        const currentTheme = themes[localStorage.getItem('portfolioTheme') || 'dark'];
         const grid = document.getElementById('principles-grid');
         grid.innerHTML = '';
         if (principles.length === 0 && !isLoggedIn) {
@@ -592,7 +603,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         } catch (error) {
             console.error("Error updating about section:", error);
-            alert("Failed to update.");
         }
     });
 
@@ -613,7 +623,6 @@ document.addEventListener('DOMContentLoaded', () => {
             closeModal('text-edit-modal');
         } catch (error) {
             console.error("Error updating text:", error);
-            alert("Failed to save text.");
         }
     });
         
@@ -652,7 +661,6 @@ document.addEventListener('DOMContentLoaded', () => {
             closeModal('project-modal');
         } catch (error) {
             console.error("Error saving project: ", error);
-            alert("Failed to save project.");
         }
     });
 
@@ -693,7 +701,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
      window.showProjectDetails = (id) => {
         const project = projects.find(p => p.id === id); if (!project) return;
-        const currentTheme = themes[localStorage.getItem('portfolioTheme') || 'light'];
+        const currentTheme = themes[localStorage.getItem('portfolioTheme') || 'dark'];
         document.getElementById('detail-title').innerText = project.title;
         document.getElementById('detail-description').innerText = project.description;
         const mainImage = document.getElementById('detail-main-image');
@@ -722,7 +730,7 @@ document.addEventListener('DOMContentLoaded', () => {
             thumbnailsContainer.appendChild(thumb);
         });
 
-        const isLight = (localStorage.getItem('portfolioTheme') || 'light') === 'light';
+        const isLight = (localStorage.getItem('portfolioTheme') || 'dark') === 'light';
         const techBgColor = isLight ? 'bg-gray-200' : 'bg-gray-700';
         const techTextColor = isLight ? 'text-sky-800' : 'text-cyan-400';
         document.getElementById('detail-tech').innerHTML = (project.technologies || [])
@@ -780,9 +788,180 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     document.getElementById('year').textContent = new Date().getFullYear();
-    const savedTheme = localStorage.getItem('portfolioTheme') || 'light';
-    applyTheme(savedTheme);
-    loadAllData();
-});
+    const savedTheme = localStorage.getItem('portfolioTheme') || 'dark';
+    
+    loadAllData().then(() => {
+         applyTheme(savedTheme);
+    });
 
+
+
+    const cursorDot = document.querySelector('.cursor-dot');
+    const cursorOutline = document.querySelector('.cursor-outline');
+    const aboutSection = document.getElementById('about');
+    let cursorBoundary = aboutSection.offsetTop;
+
+    window.addEventListener('resize', () => {
+        cursorBoundary = aboutSection.offsetTop;
+    });
+    
+    const mouse = { x: -100, y: -100 };
+    const dot = { x: -100, y: -100, vx: 0, vy: 0 };
+    const outline = { x: -100, y: -100, vx: 0, vy: 0 };
+    
+    const dotStiffness = 0.2;
+    const outlineStiffness = 0.1;
+    const damping = 0.75;
+    
+    window.addEventListener('mousemove', e => {
+        if (e.clientY < cursorBoundary) {
+            cursorDot.style.opacity = '1';
+            cursorOutline.style.opacity = '1';
+            mouse.x = e.clientX;
+            mouse.y = e.clientY;
+        } else {
+            cursorDot.style.opacity = '0';
+            cursorOutline.style.opacity = '0';
+        }
+    });
+
+    document.body.addEventListener('mouseleave', () => {
+        cursorDot.style.opacity = '0';
+        cursorOutline.style.opacity = '0';
+    });
+    
+    function animateCursor() {
+        let dotAx = (mouse.x - dot.x) * dotStiffness;
+        let dotAy = (mouse.y - dot.y) * dotStiffness;
+        dot.vx += dotAx;
+        dot.vy += dotAy;
+        dot.vx *= damping;
+        dot.vy *= damping;
+        dot.x += dot.vx;
+        dot.y += dot.vy;
+        cursorDot.style.transform = `translate(${dot.x}px, ${dot.y}px) translate(-50%, -50%)`;
+
+        let outlineAx = (mouse.x - outline.x) * outlineStiffness;
+        let outlineAy = (mouse.y - outline.y) * outlineStiffness;
+        outline.vx += outlineAx;
+        outline.vy += outlineAy;
+        outline.vx *= damping;
+        outline.vy *= damping;
+        outline.x += outline.vx;
+        outline.y += outline.vy;
+        cursorOutline.style.transform = `translate(${outline.x}px, ${outline.y}px) translate(-50%, -50%)`;
+
+        requestAnimationFrame(animateCursor);
+    }
+    animateCursor();
+
+    
+    function setupCursorHover() {
+        const interactiveElements = document.querySelectorAll('a, button, .project-card, .principle-card, .skill-item, .gallery-thumbnail, input, textarea');
+        interactiveElements.forEach(el => {
+            el.addEventListener('mouseover', () => {
+                cursorDot.classList.add('hovered');
+                cursorOutline.classList.add('hovered');
+            });
+            el.addEventListener('mouseout', () => {
+                cursorDot.classList.remove('hovered');
+                cursorOutline.classList.remove('hovered');
+            });
+        });
+    }
+    setTimeout(setupCursorHover, 1500); 
+
+    const bgLayer2 = document.getElementById('bg-layer-2');
+    window.addEventListener('mousemove', (e) => {
+        const { clientX, clientY } = e;
+        const x = Math.round((clientX / window.innerWidth) * 100);
+        const y = Math.round((clientY / window.innerHeight) * 35);
+        
+        const themeName = localStorage.getItem('portfolioTheme') || 'dark';
+        const theme = themes[themeName];
+        
+        if (theme.bgLayer2.includes('radial-gradient')) {
+            const bgRule = theme.bgLayer2.match(/\[(.*?)\]/)[1].replace(/_/g, ' ');
+            const newBg = bgRule.replace(/at .*?,/, `at ${x}% ${y}%,`);
+            bgLayer2.style.background = newBg;
+        }
+    });
+
+    const scrollElements = document.querySelectorAll('.animate-on-scroll');
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('is-visible');
+            }
+        });
+    }, { threshold: 0.1 });
+    scrollElements.forEach(el => observer.observe(el));
+
+    const heroSection = document.getElementById('hero');
+    heroSection.addEventListener('mousemove', (e) => {
+        const { clientX, clientY, currentTarget } = e;
+        const { clientWidth, clientHeight } = currentTarget;
+        const xRotation = 20 * ((clientY - clientHeight / 2) / clientHeight);
+        const yRotation = -20 * ((clientX - clientWidth / 2) / clientWidth);
+        const heroContent = heroSection.querySelector('div'); 
+        heroContent.style.transform = `perspective(1000px) rotateX(${xRotation}deg) rotateY(${yRotation}deg) scale3d(1, 1, 1)`;
+        heroContent.style.transition = 'transform 0.1s ease';
+    });
+     heroSection.addEventListener('mouseleave', () => {
+        const heroContent = heroSection.querySelector('div');
+        heroContent.style.transform = `perspective(1000px) rotateX(0) rotateY(0) scale3d(1, 1, 1)`;
+        heroContent.style.transition = 'transform 0.5s ease';
+     });
+
+    function initCodeBackground() {
+        const container = document.getElementById('code-background');
+        if (!container) return;
+
+        window.addEventListener('scroll', () => {
+            container.style.transform = `translateY(${window.scrollY * -0.2}px)`;
+        }, { passive: true });
+
+        const codeSnippets = [
+            'Text(text = "Hello, Robert Romany!")',
+            'val user = User("Robert", "Dev")\n',
+            'fun setupRecyclerView() {\n\n  recyclerView.adapter = myAdapter\n}\n',
+            '\nval user = User("Robert", "Dev")\n',
+            'viewModel.data.observe(this) { ... }',
+            '\nsuspend fun fetchData(): Result<Data>',
+            'LazyColumn {\n  items(items) { item -> ... }\n}',
+            'LaunchedEffect(Unit) {\n  // side effect\n}',
+            '\ndata class Person(val name: String)',
+            'override fun onCreate(...) { super.onCreate(savedInstanceState)\n ... }',
+            'Modifier.padding(16.dp)',
+            '\nText(text = "Hello, Robert Romany!")'
+        ];
+        
+        const createSnippet = () => {
+            if (document.hidden || container.childElementCount > 30) return;
+
+            const codeEl = document.createElement('pre');
+            codeEl.className = 'code-line';
+            codeEl.textContent = codeSnippets[Math.floor(Math.random() * codeSnippets.length)];
+            
+            codeEl.style.top = `${Math.random() * 100}%`;
+            codeEl.style.left = `${Math.random() * 95}%`;
+            
+            const disappear = () => {
+                codeEl.style.opacity = '0';
+                codeEl.style.transform = 'scale(0.5)';
+                codeEl.addEventListener('transitionend', () => codeEl.remove(), { once: true });
+            };
+            
+            codeEl.addEventListener('mouseover', disappear, { once: true });
+            
+            container.appendChild(codeEl);
+            
+            setTimeout(disappear, 8000 + Math.random() * 4000);
+        };
+
+        setInterval(createSnippet, 1000);
+    }
+    initCodeBackground();
+    
+});
 
