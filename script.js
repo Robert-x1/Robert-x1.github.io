@@ -28,89 +28,69 @@ document.addEventListener('DOMContentLoaded', () => {
     feather.replace();
 
     const themes = {
-        dark: {
-            cursorColor: '#22d3ee', // Cyan
-            body: 'bg-gray-900 text-gray-200',
-            bgLayer1: 'bg-gray-900 bg-[radial-gradient(#e5e7eb0f_1px,transparent_1px)] [background-size:16px_16px]',
+       dark: {
+            cursorColor: '#00f15e',
+            body: 'bg-black text-gray-200', // تم التغيير إلى bg-black
+            bgLayer1: 'bg-black bg-[radial-gradient(#e5e7eb0f_1px,transparent_1px)] [background-size:16px_16px]', // تم التغيير إلى bg-black
             bgLayer1Fade: 'opacity-100',
-            bgLayer2: 'bg-[radial-gradient(circle_500px_at_50%_200px,rgba(14,165,233,0.15),transparent)]',
+            bgLayer2: 'bg-[radial-gradient(circle_500px_at_50%_200px,rgba(0,241,94,0.15),transparent)]',
             bgLayer2Fade: 'opacity-100',
-            navbar: 'bg-gray-900/80 backdrop-blur-sm',
+            navbar: 'bg-black/80 backdrop-blur-sm', // تم التغيير إلى bg-black
             navLogo: 'text-white',
-            navLink: 'text-gray-300 hover:text-cyan-400',
-            heroTitle: 'text-white', heroName: 'text-cyan-400', heroSubtitle: 'text-gray-400',
-            sectionTitle: 'text-white', sectionText: 'text-gray-400', underline: 'bg-cyan-400',
-            aboutImage: 'ring-cyan-500/30 shadow-cyan-500/10',
-            principleCard: 'bg-gray-800/50', principleIcon: 'text-cyan-400',
+            navLink: 'text-gray-300 hover:text-[#00f15e]',
+            heroTitle: 'text-white', 
+            heroName: 'text-[#00f15e]',
+            heroSubtitle: 'text-gray-400',
+            sectionTitle: 'text-white', sectionText: 'text-gray-400', 
+            underline: 'bg-[#00f15e]',
+            aboutImage: 'ring-[#00f15e]/30 shadow-[#00f15e]/10',
+            principleCard: 'bg-gray-900 border border-gray-800', // جعلت الكروت أغمق قليلاً لتتناسب مع السواد
+            principleIcon: 'text-[#00f15e]',
             skillsContainer: 'text-gray-300',
-            projectCard: 'bg-gray-800',
-            addBtn: 'bg-cyan-500/20 hover:bg-cyan-500/40 text-cyan-300',
-            emailContainer: 'bg-gray-800', emailText: 'text-gray-300',
-            copyBtn: 'bg-gray-700 hover:bg-gray-600 text-gray-300',
-            mailtoBtn: 'bg-cyan-500 hover:bg-cyan-600 text-white',
-            footer: 'bg-gray-800/50 border-gray-700 text-gray-400',
-            modalContent: 'bg-gray-800 text-white',
-            modalInput: 'bg-gray-700 text-white focus:ring-cyan-400',
-            modalSubmit: 'bg-cyan-500 hover:bg-cyan-600',
+            projectCard: 'bg-gray-900 border border-gray-800', // جعلت الكروت أغمق قليلاً لتتناسب مع السواد
+            addBtn: 'bg-[#00f15e]/20 hover:bg-[#00f15e]/40 text-[#00f15e]',
+            emailContainer: 'bg-gray-900 border border-gray-800', // جعلت الحاوية أغمق
+            emailText: 'text-gray-300',
+            copyBtn: 'bg-gray-800 hover:bg-gray-700 text-gray-300',
+            mailtoBtn: 'bg-[#00f15e] hover:bg-[#00c74d] text-gray-900',
+            footer: 'bg-black border-gray-800 text-gray-400', 
+            modalContent: 'bg-gray-900 border border-gray-700 text-white', 
+            modalInput: 'bg-gray-800 text-white focus:ring-[#00f15e]',
+            modalSubmit: 'bg-[#00f15e] hover:bg-[#00c74d] text-gray-900',
             modalClose: 'text-gray-400 hover:text-white',
-            detailLinkSource: 'bg-gray-700 hover:bg-gray-600 text-white',
-            detailLinkLive: 'bg-cyan-500 hover:bg-cyan-600 text-white',
-            activeThumb: 'border-cyan-400',
+            detailLinkSource: 'bg-gray-800 hover:bg-gray-700 text-white',
+            detailLinkLive: 'bg-[#00f15e] hover:bg-[#00c74d] text-gray-900',
+            activeThumb: 'border-[#00f15e]',
         },
-        light: {
-            cursorColor: '#0ea5e9', // Sky
-            body: 'bg-gray-50 text-gray-800',
-            bgLayer1: 'bg-white', bgLayer1Fade: 'opacity-100',
-            bgLayer2: 'bg-[radial-gradient(circle_500px_at_50%_200px,rgba(14,165,233,0.1),transparent)]', bgLayer2Fade: 'opacity-100',
-            navbar: 'bg-white/80 backdrop-blur-sm border-b border-gray-200',
-            navLogo: 'text-gray-900',
-            navLink: 'text-gray-600 hover:text-sky-500',
-            heroTitle: 'text-gray-900', heroName: 'text-sky-500', heroSubtitle: 'text-gray-600',
-            sectionTitle: 'text-gray-900', sectionText: 'text-gray-600', underline: 'bg-sky-500',
-            aboutImage: 'ring-sky-500/30 shadow-sky-500/20',
-            principleCard: 'bg-white border border-gray-200/80 shadow-sm', principleIcon: 'text-sky-500',
-            skillsContainer: 'text-gray-700',
-            projectCard: 'bg-white border border-gray-200/80 shadow-sm',
-            addBtn: 'bg-sky-500/10 hover:bg-sky-500/20 text-sky-600',
-            emailContainer: 'bg-gray-100 border border-gray-200', emailText: 'text-gray-700',
-            copyBtn: 'bg-gray-200 hover:bg-gray-300 text-gray-600',
-            mailtoBtn: 'bg-sky-500 hover:bg-sky-600 text-white',
-            footer: 'bg-white border-gray-200 text-gray-500',
-            modalContent: 'bg-white text-gray-800',
-            modalInput: 'bg-gray-100 text-gray-800 focus:ring-sky-500',
-            modalSubmit: 'bg-sky-500 hover:bg-sky-600',
-            modalClose: 'text-gray-500 hover:text-gray-900',
-            detailLinkSource: 'bg-gray-200 hover:bg-gray-300 text-gray-800',
-            detailLinkLive: 'bg-sky-500 hover:bg-sky-600 text-white',
-            activeThumb: 'border-sky-500',
-        },
-        glass: {
-            cursorColor: '#d946ef', // Fuchsia
-            body: 'bg-gray-900 text-gray-200',
-            bgLayer1: 'bg-gray-900 bg-[radial-gradient(#e5e7eb0f_1px,transparent_1px)] [background-size:16px_16px]',
-            bgLayer2: 'bg-[radial-gradient(circle_500px_at_50%_200px,rgba(192,38,211,0.15),transparent)]',
-            bgLayer2Fade: 'opacity-50',
-            navbar: 'bg-white/5 backdrop-blur-lg border-b border-white/10',
-            navLogo: 'text-white',
-            navLink: 'text-gray-300 hover:text-fuchsia-400',
-            heroTitle: 'text-white', heroName: 'text-fuchsia-400', heroSubtitle: 'text-gray-300',
-            sectionTitle: 'text-white', sectionText: 'text-gray-300', underline: 'bg-fuchsia-500',
-            aboutImage: 'ring-fuchsia-500/30 shadow-fuchsia-500/20',
-            principleCard: 'bg-white/10 backdrop-blur-lg border border-white/10 shadow-lg', principleIcon: 'text-fuchsia-400',
-            skillsContainer: 'text-gray-200',
-            projectCard: 'bg-white/10 backdrop-blur-lg border border-white/10 shadow-lg',
-            addBtn: 'bg-fuchsia-500/20 hover:bg-fuchsia-500/40 text-fuchsia-300',
-            emailContainer: 'bg-white/10 backdrop-blur-lg border border-white/10', emailText: 'text-gray-200',
-            copyBtn: 'bg-white/10 hover:bg-white/20 text-gray-200',
-            mailtoBtn: 'bg-fuchsia-500 hover:bg-fuchsia-600 text-white',
-            footer: 'bg-white/5 border-white/10 text-gray-400',
-            modalContent: 'bg-gray-800/50 backdrop-blur-xl border border-white/10 text-white',
-            modalInput: 'bg-white/10 text-white focus:ring-fuchsia-400 placeholder:text-gray-400',
-            modalSubmit: 'bg-fuchsia-500 hover:bg-fuchsia-600',
-            modalClose: 'text-gray-300 hover:text-white',
-            detailLinkSource: 'bg-white/10 hover:bg-white/20 text-white',
-            detailLinkLive: 'bg-fuchsia-500 hover:bg-fuchsia-600 text-white',
-            activeThumb: 'border-fuchsia-400',
+light: {
+            cursorColor: '#2563eb', // Royal Blue
+            body: 'bg-white text-slate-800',
+            bgLayer1: 'bg-white', 
+            bgLayer1Fade: 'opacity-100',
+            bgLayer2: 'bg-[radial-gradient(circle_800px_at_50%_200px,rgba(37,99,235,0.08),transparent)]', 
+            bgLayer2Fade: 'opacity-100',
+            navbar: 'bg-white/90 backdrop-blur-md border-b border-slate-100',
+            navLogo: 'text-slate-900',
+            navLink: 'text-slate-600 hover:text-blue-600',
+            heroTitle: 'text-slate-900', heroName: 'text-blue-600', heroSubtitle: 'text-slate-500',
+            sectionTitle: 'text-slate-900', sectionText: 'text-slate-600', underline: 'bg-blue-600',
+            aboutImage: 'ring-blue-600/20 shadow-blue-600/10',
+            principleCard: 'bg-white border border-slate-100 shadow-sm hover:shadow-md hover:border-blue-100', 
+            principleIcon: 'text-blue-600',
+            skillsContainer: 'text-slate-700',
+            projectCard: 'bg-white border border-slate-100 shadow-sm hover:shadow-md transition-shadow',
+            addBtn: 'bg-blue-50 hover:bg-blue-100 text-blue-600',
+            emailContainer: 'bg-slate-50 border border-slate-200', emailText: 'text-slate-700',
+            copyBtn: 'bg-white border border-slate-200 hover:bg-slate-100 text-slate-600',
+            mailtoBtn: 'bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-600/20',
+            footer: 'bg-white border-t border-slate-100 text-slate-400',
+            modalContent: 'bg-white text-slate-800',
+            modalInput: 'bg-slate-50 border border-slate-200 text-slate-800 focus:ring-blue-600 placeholder:text-slate-400',
+            modalSubmit: 'bg-blue-600 hover:bg-blue-700 text-white',
+            modalClose: 'text-slate-400 hover:text-slate-800',
+            detailLinkSource: 'bg-slate-100 hover:bg-slate-200 text-slate-800',
+            detailLinkLive: 'bg-blue-600 hover:bg-blue-700 text-white',
+            activeThumb: 'border-blue-600',
         }
     };
     
@@ -118,7 +98,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const theme = themes[themeName];
         document.documentElement.style.setProperty('--cursor-color', theme.cursorColor);
 
-        // Add theme class to body for specific CSS rules
         document.body.classList.remove('theme-dark', 'theme-light', 'theme-glass');
         document.body.classList.add(`theme-${themeName}`);
 
@@ -795,7 +774,9 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
 
+    // --- START: كود التحسينات التفاعلية ---
 
+    // 1. مؤشر فأرة مخصص
     const cursorDot = document.querySelector('.cursor-dot');
     const cursorOutline = document.querySelector('.cursor-outline');
     const aboutSection = document.getElementById('about');
@@ -831,6 +812,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     
     function animateCursor() {
+        // Dot physics
         let dotAx = (mouse.x - dot.x) * dotStiffness;
         let dotAy = (mouse.y - dot.y) * dotStiffness;
         dot.vx += dotAx;
@@ -841,6 +823,7 @@ document.addEventListener('DOMContentLoaded', () => {
         dot.y += dot.vy;
         cursorDot.style.transform = `translate(${dot.x}px, ${dot.y}px) translate(-50%, -50%)`;
 
+        // Outline physics
         let outlineAx = (mouse.x - outline.x) * outlineStiffness;
         let outlineAy = (mouse.y - outline.y) * outlineStiffness;
         outline.vx += outlineAx;
@@ -875,7 +858,8 @@ document.addEventListener('DOMContentLoaded', () => {
     window.addEventListener('mousemove', (e) => {
         const { clientX, clientY } = e;
         const x = Math.round((clientX / window.innerWidth) * 100);
-        const y = Math.round((clientY / window.innerHeight) * 35);
+        
+        const y = Math.round((clientY / window.innerHeight) * 100); 
         
         const themeName = localStorage.getItem('portfolioTheme') || 'dark';
         const theme = themes[themeName];
@@ -897,6 +881,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }, { threshold: 0.1 });
     scrollElements.forEach(el => observer.observe(el));
 
+    // 4. تأثير الميلان ثلاثي الأبعاد في قسم Hero
     const heroSection = document.getElementById('hero');
     heroSection.addEventListener('mousemove', (e) => {
         const { clientX, clientY, currentTarget } = e;
@@ -913,6 +898,7 @@ document.addEventListener('DOMContentLoaded', () => {
         heroContent.style.transition = 'transform 0.5s ease';
      });
 
+    // 5. خلفية الكود المتحركة
     function initCodeBackground() {
         const container = document.getElementById('code-background');
         if (!container) return;
@@ -962,6 +948,7 @@ document.addEventListener('DOMContentLoaded', () => {
         setInterval(createSnippet, 1000);
     }
     initCodeBackground();
+    // --- END: كود التحسينات التفاعلية ---
     
 });
 

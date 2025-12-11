@@ -1,8 +1,19 @@
 <!DOCTYPE html>
 <html lang="en" dir="ltr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Robert Romany - Android Developer Portfolio. Expert in Kotlin, Jetpack Compose, and Clean Architecture.">
+
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://robert-portfolio.web.app/"> <meta property="og:title" content="Robert Romany | Android Developer">
+    <meta property="og:description" content="Check out my portfolio featuring top-tier Android apps built with modern technologies.">
+    <meta property="og:image" content="https://placehold.co/1200x630/00f15e/000000?text=Robert+Portfolio">
+
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://robert-portfolio.web.app/">
+    <meta property="twitter:title" content="Robert Romany | Android Developer">
+    <meta property="twitter:description" content="Check out my portfolio featuring top-tier Android apps built with modern technologies.">
+    <meta property="twitter:image" content="https://placehold.co/1200x630/00f15e/000000?text=Robert+Portfolio">
+
     <title>Robert Romany | Android Developer</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -21,7 +32,7 @@
     <div id="code-background" class="fixed top-0 left-0 w-full h-full z-[-1] pointer-events-none overflow-hidden"></div>
 
     <div id="bg-layer-1" class="absolute top-0 left-0 z-[-2] h-full w-full transition-opacity duration-500"></div>
-    <div id="bg-layer-2" class="absolute top-0 left-0 z-[-2] h-full w-full transition-opacity duration-500"></div>
+    <div id="bg-layer-2" class="fixed top-0 left-0 z-[-2] h-full w-full transition-opacity duration-500"></div>
 
     <nav id="navbar" class="fixed w-full z-30 top-0 transition-colors duration-500">
         <div class="container mx-auto px-6 py-4 flex justify-between items-center">
@@ -38,7 +49,6 @@
                 <div id="theme-switcher" class="flex items-center space-x-2">
                      <button class="theme-btn" data-theme="dark" title="Dark Mode"><i data-feather="moon"></i></button>
                      <button class="theme-btn" data-theme="light" title="Light Mode"><i data-feather="sun"></i></button>
-                     <button class="theme-btn" data-theme="glass" title="Glassmorphism"><i data-feather="grid"></i></button>
                 </div>
                 <button id="login-btn" class="nav-link transition-colors duration-500">Admin Login</button>
                 <button id="logout-btn" class="hidden text-red-400 hover:text-red-500 transition">Logout</button>
@@ -62,6 +72,7 @@
                     <button id="edit-hero-subtitle-btn" class="edit-icon"><i data-feather="edit-2" class="w-5 h-5"></i></button>
                 </div>
 
+                <!-- START: Social Media Links -->
                 <div id="hero-socials" class="mt-8 flex items-center justify-center md:justify-start space-x-6">
                     <a href="https://www.linkedin.com/in/robert-romany-dev/" target="_blank" aria-label="LinkedIn Profile" class="text-gray-400 hover:text-white transition-colors duration-300">
                         <i data-feather="linkedin" class="w-6 h-6"></i>
@@ -74,7 +85,7 @@
                     </a>
                     
                 </div>
-               
+                <!-- END: Social Media Links -->
 
             </div>
         </section>
