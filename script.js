@@ -643,7 +643,7 @@ light: {
         }
     });
 
-    window.handleEditProject = (id) => {
+window.handleEditProject = (id) => {
         const project = projects.find(p => p.id === id); if (!project) return;
         document.getElementById('project-id').value = project.id;
         document.getElementById('project-title').value = project.title;
@@ -653,14 +653,16 @@ light: {
         document.getElementById('project-source-link').value = project.sourceLink || '';
         document.getElementById('project-live-link').value = project.liveLink || '';
         
+        const currentThemeName = localStorage.getItem('portfolioTheme') || 'dark';
+        const inputClasses = themes[currentThemeName].modalInput; 
         const imagesContainer = document.getElementById('additional-images-container');
         imagesContainer.innerHTML = '';
         (project.images || []).forEach(img => {
             const newImageRow = document.createElement('div');
             newImageRow.className = 'flex items-center gap-2';
             newImageRow.innerHTML = `
-                <input type="url" placeholder="Image URL" class="modal-input p-2 rounded-lg flex-grow additional-image-url" value="${img.url || ''}">
-                <input type="text" placeholder="Image Description" class="modal-input p-2 rounded-lg flex-grow-[2] additional-image-desc" value="${img.description || ''}">
+                <input type="url" placeholder="Image URL" class="modal-input ${inputClasses} p-2 rounded-lg flex-grow additional-image-url" value="${img.url || ''}">
+                <input type="text" placeholder="Image Description" class="modal-input ${inputClasses} p-2 rounded-lg flex-grow-[2] additional-image-desc" value="${img.description || ''}">
                 <button type="button" class="p-2 bg-red-500/50 hover:bg-red-500/80 rounded-lg remove-image-btn"><i data-feather="trash-2" class="w-4 h-4"></i></button>
             `;
             imagesContainer.appendChild(newImageRow);
@@ -730,12 +732,15 @@ light: {
         openModal('project-detail-modal');
     };
     
-    document.getElementById('add-image-btn').addEventListener('click', () => {
+ document.getElementById('add-image-btn').addEventListener('click', () => {
+      
+        const currentThemeName = localStorage.getItem('portfolioTheme') || 'dark';
+        const inputClasses = themes[currentThemeName].modalInput;
         const newImageRow = document.createElement('div');
         newImageRow.className = 'flex items-center gap-2';
         newImageRow.innerHTML = `
-            <input type="url" placeholder="Image URL" class="modal-input p-2 rounded-lg flex-grow additional-image-url">
-            <input type="text" placeholder="Image Description" class="modal-input p-2 rounded-lg flex-grow-[2] additional-image-desc">
+            <input type="url" placeholder="Image URL" class="modal-input ${inputClasses} p-2 rounded-lg flex-grow additional-image-url">
+            <input type="text" placeholder="Image Description" class="modal-input ${inputClasses} p-2 rounded-lg flex-grow-[2] additional-image-desc">
             <button type="button" class="p-2 bg-red-500/50 hover:bg-red-500/80 rounded-lg remove-image-btn"><i data-feather="trash-2" class="w-4 h-4"></i></button>
         `;
         document.getElementById('additional-images-container').appendChild(newImageRow);
