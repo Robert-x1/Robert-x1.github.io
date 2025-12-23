@@ -35,7 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
             bgLayer1Fade: 'opacity-100',
             bgLayer2: 'bg-[radial-gradient(circle_500px_at_50%_200px,rgba(0,241,94,0.15),transparent)]',
             bgLayer2Fade: 'opacity-100',
-            navbar: 'bg-black/80 backdrop-blur-sm', // تم التغيير إلى bg-black
+            navbar: 'bg-black/80 backdrop-blur-sm', 
             navLogo: 'text-white',
             navLink: 'text-gray-300 hover:text-[#00f15e]',
             heroTitle: 'text-white', 
@@ -44,12 +44,12 @@ document.addEventListener('DOMContentLoaded', () => {
             sectionTitle: 'text-white', sectionText: 'text-gray-400', 
             underline: 'bg-[#00f15e]',
             aboutImage: 'ring-[#00f15e]/30 shadow-[#00f15e]/10',
-            principleCard: 'bg-gray-900 border border-gray-800', // جعلت الكروت أغمق قليلاً لتتناسب مع السواد
+            principleCard: 'bg-gray-900 border border-gray-800 shadow-[0_0_15px_-3px_rgba(0,241,94,0.1)] hover:shadow-[0_0_25px_-5px_rgba(0,241,94,0.2)] transition-shadow duration-300',
             principleIcon: 'text-[#00f15e]',
             skillsContainer: 'text-gray-300',
-            projectCard: 'bg-gray-900 border border-gray-800', // جعلت الكروت أغمق قليلاً لتتناسب مع السواد
+            projectCard: 'bg-gray-900 border border-gray-800 shadow-[0_0_15px_-3px_rgba(0,241,94,0.1)] hover:shadow-[0_0_25px_-5px_rgba(0,241,94,0.2)] transition-shadow duration-300',
             addBtn: 'bg-[#00f15e]/20 hover:bg-[#00f15e]/40 text-[#00f15e]',
-            emailContainer: 'bg-gray-900 border border-gray-800', // جعلت الحاوية أغمق
+            emailContainer: 'bg-gray-900 border border-gray-800',
             emailText: 'text-gray-300',
             copyBtn: 'bg-gray-800 hover:bg-gray-700 text-gray-300',
             mailtoBtn: 'bg-[#00f15e] hover:bg-[#00c74d] text-gray-900',
@@ -774,14 +774,12 @@ window.handleEditProject = (id) => {
     document.getElementById('year').textContent = new Date().getFullYear();
     const savedTheme = localStorage.getItem('portfolioTheme') || 'dark';
     
-    loadAllData().then(() => {
-         applyTheme(savedTheme);
-    });
+   applyTheme(savedTheme);
+
+    loadAllData();
 
 
-    // --- START: كود التحسينات التفاعلية ---
 
-    // 1. مؤشر فأرة مخصص
     const cursorDot = document.querySelector('.cursor-dot');
     const cursorOutline = document.querySelector('.cursor-outline');
     const aboutSection = document.getElementById('about');
@@ -817,7 +815,6 @@ window.handleEditProject = (id) => {
     });
     
     function animateCursor() {
-        // Dot physics
         let dotAx = (mouse.x - dot.x) * dotStiffness;
         let dotAy = (mouse.y - dot.y) * dotStiffness;
         dot.vx += dotAx;
@@ -828,7 +825,6 @@ window.handleEditProject = (id) => {
         dot.y += dot.vy;
         cursorDot.style.transform = `translate(${dot.x}px, ${dot.y}px) translate(-50%, -50%)`;
 
-        // Outline physics
         let outlineAx = (mouse.x - outline.x) * outlineStiffness;
         let outlineAy = (mouse.y - outline.y) * outlineStiffness;
         outline.vx += outlineAx;
@@ -886,7 +882,6 @@ window.handleEditProject = (id) => {
     }, { threshold: 0.1 });
     scrollElements.forEach(el => observer.observe(el));
 
-    // 4. تأثير الميلان ثلاثي الأبعاد في قسم Hero
     const heroSection = document.getElementById('hero');
     heroSection.addEventListener('mousemove', (e) => {
         const { clientX, clientY, currentTarget } = e;
@@ -903,7 +898,6 @@ window.handleEditProject = (id) => {
         heroContent.style.transition = 'transform 0.5s ease';
      });
 
-    // 5. خلفية الكود المتحركة
     function initCodeBackground() {
         const container = document.getElementById('code-background');
         if (!container) return;
@@ -953,7 +947,7 @@ window.handleEditProject = (id) => {
         setInterval(createSnippet, 1000);
     }
     initCodeBackground();
-    // --- END: كود التحسينات التفاعلية ---
     
 });
+
 
