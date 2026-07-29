@@ -260,7 +260,7 @@ body.theme-light .about-img { border-color: rgba(37,99,235,0.2); }
     transform: translateX(-50%);
 }
 body.theme-light .timeline-line { background: linear-gradient(to bottom, transparent, rgba(37,99,235,0.3) 20%, rgba(37,99,235,0.3) 80%, transparent); }
-.timeline-item { 
+.timeline-item {
     position: relative;
     width: 47%;
     margin-bottom: 3rem;
@@ -472,14 +472,14 @@ body.theme-light .theme-btn.active { color: #2563eb; }
 .cursor-dot, .cursor-outline { position: fixed; top: 0; left: 0; pointer-events: none; z-index: 9999; border-radius: 50%; transition: opacity 0.3s ease-in-out; will-change: transform; }
 .cursor-dot { width: 8px; height: 8px; background-color: var(--cursor-color, #00f15e); transition-property: width, height, opacity; transition-duration: 0.3s; }
 .cursor-outline { width: 40px; height: 40px; border: 2px solid var(--cursor-color, #00f15e); }
-.cursor-dot.hovered { width: 30px; height: 30px; opacity: 0.5; }
-.cursor-outline.hovered { opacity: 0; }
+.cursor-dot.hovered { width: 12px; height: 12px; opacity: 1; }
+.cursor-outline.hovered { width: 60px; height: 60px; opacity: 0.6; border-width: 1.5px; }
 
 /* ===== SCROLL ANIMATIONS ===== */
 .animate-on-scroll { opacity: 0; transform: translateY(20px); transition: opacity 0.7s ease-out, transform 0.6s ease-out; }
 .animate-on-scroll.is-visible { opacity: 1; transform: translateY(0); }
 
-/* CODE BACKGROUND */
+/* ===== CODE BACKGROUND ===== */
 body.theme-light #code-background { opacity: 0.12; }
 body.theme-dark #code-background { opacity: 0.08; }
 #code-background { transition: opacity 0.5s ease; will-change: transform; }
@@ -512,3 +512,616 @@ body.theme-light #mobile-menu a { border-bottom-color: rgba(0,0,0,0.05); }
     background: rgba(255,255,255,0.02);
 }
 body.theme-light .pending-t-card { background: #f8fafc; border-color: #e2e8f0; }
+
+
+/* =============================================================
+   STAGE 1 ADDITIONS
+   ============================================================= */
+
+/* =====================================================
+   PLATFORM BADGES
+   ===================================================== */
+.platform-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    padding: 0.25rem 0.65rem;
+    border-radius: 99px;
+    border: 1px solid;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    user-select: none;
+}
+
+/* Android — green */
+.badge-android {
+    background: rgba(61, 220, 132, 0.1);
+    color: #3ddc84;
+    border-color: rgba(61, 220, 132, 0.35);
+}
+.badge-android:hover, .platform-checkbox:checked + .badge-android {
+    background: rgba(61, 220, 132, 0.22);
+    border-color: #3ddc84;
+    box-shadow: 0 0 10px rgba(61,220,132,0.3);
+    transform: scale(1.05);
+}
+
+/* iOS — silver/blue */
+.badge-ios {
+    background: rgba(120, 160, 255, 0.1);
+    color: #78a0ff;
+    border-color: rgba(120, 160, 255, 0.35);
+}
+.badge-ios:hover, .platform-checkbox:checked + .badge-ios {
+    background: rgba(120, 160, 255, 0.22);
+    border-color: #78a0ff;
+    box-shadow: 0 0 10px rgba(120,160,255,0.3);
+    transform: scale(1.05);
+}
+
+/* Desktop — orange */
+.badge-desktop {
+    background: rgba(251, 146, 60, 0.1);
+    color: #fb923c;
+    border-color: rgba(251, 146, 60, 0.35);
+}
+.badge-desktop:hover, .platform-checkbox:checked + .badge-desktop {
+    background: rgba(251, 146, 60, 0.22);
+    border-color: #fb923c;
+    box-shadow: 0 0 10px rgba(251,146,60,0.3);
+    transform: scale(1.05);
+}
+
+/* Web — cyan */
+.badge-web {
+    background: rgba(34, 211, 238, 0.1);
+    color: #22d3ee;
+    border-color: rgba(34, 211, 238, 0.35);
+}
+.badge-web:hover, .platform-checkbox:checked + .badge-web {
+    background: rgba(34, 211, 238, 0.22);
+    border-color: #22d3ee;
+    box-shadow: 0 0 10px rgba(34,211,238,0.3);
+    transform: scale(1.05);
+}
+
+/* KMP — purple */
+.badge-kmp {
+    background: rgba(167, 139, 250, 0.1);
+    color: #a78bfa;
+    border-color: rgba(167, 139, 250, 0.35);
+}
+.badge-kmp:hover, .platform-checkbox:checked + .badge-kmp {
+    background: rgba(167, 139, 250, 0.22);
+    border-color: #a78bfa;
+    box-shadow: 0 0 10px rgba(167,139,250,0.3);
+    transform: scale(1.05);
+}
+
+/* CMP — pink */
+.badge-cmp {
+    background: rgba(244, 114, 182, 0.1);
+    color: #f472b6;
+    border-color: rgba(244, 114, 182, 0.35);
+}
+.badge-cmp:hover, .platform-checkbox:checked + .badge-cmp {
+    background: rgba(244, 114, 182, 0.22);
+    border-color: #f472b6;
+    box-shadow: 0 0 10px rgba(244,114,182,0.3);
+    transform: scale(1.05);
+}
+
+/* Light-theme overrides — slightly stronger backgrounds */
+body.theme-light .badge-android { background: rgba(61,220,132,0.08); }
+body.theme-light .badge-ios     { background: rgba(120,160,255,0.08); }
+body.theme-light .badge-desktop { background: rgba(251,146,60,0.08); }
+body.theme-light .badge-web     { background: rgba(34,211,238,0.08); }
+body.theme-light .badge-kmp     { background: rgba(167,139,250,0.08); }
+body.theme-light .badge-cmp     { background: rgba(244,114,182,0.08); }
+
+/* Platform selector checkbox styling in the project modal */
+.platform-checkbox-label { display: inline-flex; }
+
+/* =====================================================
+   SWIPER — Projects & Testimonials customisation
+   ===================================================== */
+
+/* --- Projects Swiper --- */
+.projects-swiper {
+    width: 100%;
+    padding-bottom: 3rem !important; /* room for pagination */
+}
+.projects-swiper .swiper-slide {
+    /* Each slide holds one project card; align top so cards don't stretch */
+    height: auto;
+    display: flex;
+    align-items: flex-start;
+}
+/* Make project cards fill their slide */
+.projects-swiper .swiper-slide .project-card {
+    width: 100%;
+}
+
+/* --- Testimonials Swiper --- */
+.testimonials-swiper {
+    width: 100%;
+    padding-bottom: 3rem !important;
+}
+.testimonials-swiper .swiper-slide {
+    height: auto;
+    display: flex;
+    align-items: stretch;
+}
+.testimonials-swiper .swiper-slide .testimonial-card {
+    width: 100%;
+}
+
+/* --- Shared Swiper nav/pagination colours --- */
+.swiper-button-next,
+.swiper-button-prev {
+    color: #00f15e !important;
+}
+.swiper-button-next::after,
+.swiper-button-prev::after {
+    font-size: 1.25rem !important;
+    font-weight: 900;
+}
+.swiper-pagination-bullet {
+    background: rgba(0,241,94,0.3) !important;
+    opacity: 1;
+    transition: background 0.2s ease, transform 0.2s ease;
+}
+.swiper-pagination-bullet-active {
+    background: #00f15e !important;
+    transform: scale(1.25);
+}
+body.theme-light .swiper-button-next,
+body.theme-light .swiper-button-prev { color: #2563eb !important; }
+body.theme-light .swiper-pagination-bullet { background: rgba(37,99,235,0.25) !important; }
+body.theme-light .swiper-pagination-bullet-active { background: #2563eb !important; }
+
+
+/* =====================================================
+   DEVICE MOCKUP FRAMES (KMP / CMP detail view)
+   ===================================================== */
+
+/* --- Wrapper that holds one or two frames side by side --- */
+.device-mockup-pair {
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    gap: 1.25rem;
+    width: 100%;
+    margin-bottom: 1rem;
+}
+
+/* --- Single-frame fallback (mobile-only projects) --- */
+.device-mockup-single {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 1rem;
+}
+.device-mockup-single .mockup-img {
+    max-height: 480px;
+    border-radius: 1rem;
+    object-fit: cover;
+}
+
+/* --- Shared frame shell --- */
+.device-frame {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+/* --- Frame screen area (clips the screenshot) --- */
+.frame-screen {
+    overflow: hidden;
+    background: #000;
+}
+.mockup-screen-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+/* --- Label beneath each frame --- */
+.frame-label {
+    display: block;
+    margin-top: 0.5rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.12em;
+    text-align: center;
+    color: rgba(255,255,255,0.45);
+    text-transform: uppercase;
+}
+body.theme-light .frame-label { color: rgba(0,0,0,0.35); }
+
+/* ====== Android phone frame ====== */
+.frame-android {
+    width: 140px;
+}
+.frame-android .frame-screen {
+    width: 120px;
+    height: 240px;
+    border-radius: 18px;
+    border: 6px solid #2a2a2e;
+    box-shadow:
+        0 0 0 2px #1a1a1e,
+        0 12px 40px rgba(0,0,0,0.6),
+        inset 0 0 0 1px rgba(255,255,255,0.04);
+    position: relative;
+}
+/* Notch / punch-hole camera */
+.frame-android .frame-screen::before {
+    content: '';
+    position: absolute;
+    top: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 10px;
+    height: 10px;
+    background: #1a1a1e;
+    border-radius: 50%;
+    z-index: 2;
+}
+/* Home-bar pill */
+.frame-android .frame-screen::after {
+    content: '';
+    position: absolute;
+    bottom: 6px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 36px;
+    height: 3px;
+    background: rgba(255,255,255,0.25);
+    border-radius: 99px;
+    z-index: 2;
+}
+
+/* ====== iOS phone frame ====== */
+.frame-ios {
+    width: 140px;
+}
+.frame-ios .frame-screen {
+    width: 120px;
+    height: 240px;
+    border-radius: 22px;
+    border: 7px solid #1c1c1e;
+    box-shadow:
+        0 0 0 2px #0a0a0c,
+        0 12px 40px rgba(0,0,0,0.6),
+        inset 0 0 0 1px rgba(255,255,255,0.06);
+    position: relative;
+}
+/* Dynamic Island */
+.frame-ios .frame-screen::before {
+    content: '';
+    position: absolute;
+    top: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 40px;
+    height: 12px;
+    background: #0a0a0c;
+    border-radius: 99px;
+    z-index: 2;
+}
+/* iOS home-bar */
+.frame-ios .frame-screen::after {
+    content: '';
+    position: absolute;
+    bottom: 6px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 40px;
+    height: 3px;
+    background: rgba(255,255,255,0.3);
+    border-radius: 99px;
+    z-index: 2;
+}
+
+/* ====== Laptop / Desktop frame ====== */
+.frame-laptop {
+    width: 200px;
+}
+.frame-laptop .frame-screen {
+    width: 190px;
+    height: 120px;
+    border-radius: 6px 6px 0 0;
+    border: 6px solid #222226;
+    box-shadow:
+        0 0 0 1px #111115,
+        0 12px 40px rgba(0,0,0,0.5);
+    position: relative;
+}
+/* Laptop base / hinge bar */
+.frame-laptop::after {
+    content: '';
+    display: block;
+    width: 210px;
+    height: 8px;
+    background: linear-gradient(to bottom, #2a2a2e, #1a1a1e);
+    border-radius: 0 0 4px 4px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+}
+
+/* ====== Tablet frame ====== */
+.frame-tablet {
+    width: 170px;
+}
+.frame-tablet .frame-screen {
+    width: 155px;
+    height: 210px;
+    border-radius: 14px;
+    border: 8px solid #1e1e22;
+    box-shadow:
+        0 0 0 2px #0e0e12,
+        0 12px 40px rgba(0,0,0,0.5);
+    position: relative;
+}
+.frame-tablet .frame-screen::after {
+    content: '';
+    position: absolute;
+    bottom: 8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 36px;
+    height: 3px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 99px;
+    z-index: 2;
+}
+
+/* Light-theme frame colours */
+body.theme-light .frame-android .frame-screen { border-color: #d0d0d8; box-shadow: 0 0 0 2px #b0b0bc, 0 12px 40px rgba(0,0,0,0.15); }
+body.theme-light .frame-android .frame-screen::before { background: #b0b0bc; }
+body.theme-light .frame-ios .frame-screen { border-color: #c8c8d0; box-shadow: 0 0 0 2px #a8a8b8, 0 12px 40px rgba(0,0,0,0.15); }
+body.theme-light .frame-ios .frame-screen::before { background: #a8a8b8; }
+body.theme-light .frame-laptop .frame-screen { border-color: #c0c0cc; box-shadow: 0 0 0 1px #a8a8b8, 0 12px 40px rgba(0,0,0,0.12); }
+body.theme-light .frame-laptop::after { background: linear-gradient(to bottom, #c8c8d4, #b0b0bc); }
+body.theme-light .frame-tablet .frame-screen { border-color: #c4c4cc; box-shadow: 0 0 0 2px #a8a8b8, 0 12px 40px rgba(0,0,0,0.12); }
+
+/* Responsive: stack vertically on small screens */
+@media (max-width: 500px) {
+    .device-mockup-pair {
+        flex-direction: column;
+        align-items: center;
+        gap: 1.5rem;
+    }
+}
+
+/* =====================================================
+   GLOBAL SETTINGS MODAL — field label helper
+   ===================================================== */
+.settings-field-label {
+    display: flex;
+    align-items: center;
+    font-size: 0.78rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    color: rgba(255,255,255,0.55);
+    margin-bottom: 0.5rem;
+}
+body.theme-light .settings-field-label { color: rgba(0,0,0,0.45); }
+
+/* Subtle divider between settings fields */
+#global-settings-form .grid > div + div {
+    padding-top: 0.25rem;
+    border-top: 1px solid rgba(255,255,255,0.04);
+}
+body.theme-light #global-settings-form .grid > div + div {
+    border-top-color: rgba(0,0,0,0.04);
+}
+
+/* =============================================================
+   PROJECT DETAIL GALLERY — full-width image carousel at top
+   ============================================================= */
+
+/* Gallery wrapper inside the LEFT column of the detail modal */
+.detail-gallery {
+    width: 100%;
+    margin-bottom: 1rem;
+}
+
+/* Main image area — fixed-height, centered, with relative for arrows */
+.detail-gallery-main {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 16/9;
+    background: rgba(0,0,0,0.3);
+    border-radius: 0.875rem;
+    overflow: hidden;
+    cursor: pointer;
+}
+body.theme-light .detail-gallery-main { background: #f1f5f9; }
+
+.detail-gallery-img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+    transition: opacity 0.2s ease;
+}
+.detail-gallery-img.detail-gallery-fade { opacity: 0; }
+
+/* Prev / Next arrows */
+.detail-gallery-arrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 10;
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0,0,0,0.55);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: #fff;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    backdrop-filter: blur(6px);
+}
+.detail-gallery-arrow:hover { background: rgba(0,241,94,0.7); border-color: #00f15e; transform: translateY(-50%) scale(1.1); }
+body.theme-light .detail-gallery-arrow:hover { background: rgba(37,99,235,0.7); border-color: #2563eb; }
+.detail-gallery-prev { left: 0.5rem; }
+.detail-gallery-next { right: 0.5rem; }
+
+/* Dot indicators */
+.detail-gallery-dots {
+    position: absolute;
+    bottom: 0.6rem;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 0.35rem;
+    z-index: 10;
+}
+.detail-gallery-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.35);
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    transition: all 0.2s ease;
+}
+.detail-gallery-dot.active {
+    background: #00f15e;
+    width: 18px;
+    border-radius: 99px;
+}
+body.theme-light .detail-gallery-dot.active { background: #2563eb; }
+
+/* Thumbnail strip below main image */
+.detail-thumb-strip {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.625rem;
+    overflow-x: auto;
+    padding-bottom: 0.25rem;
+    scrollbar-width: thin;
+}
+.detail-thumb-strip::-webkit-scrollbar { height: 4px; }
+.detail-thumb-strip::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 99px; }
+.detail-thumb-strip .gallery-thumbnail {
+    width: 64px;
+    height: 48px;
+    object-fit: cover;
+    border-radius: 0.5rem;
+    flex-shrink: 0;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: transform 0.15s ease, border-color 0.15s ease;
+    opacity: 0.6;
+}
+.detail-thumb-strip .gallery-thumbnail.active,
+.detail-thumb-strip .gallery-thumbnail:hover {
+    transform: scale(1.08);
+    opacity: 1;
+}
+
+/* Device frame strip below gallery */
+.detail-frame-strip {
+    display: flex;
+    justify-content: center;
+    margin: 0.75rem 0 1rem;
+}
+
+/* =============================================================
+   PROJECT DETAIL MODAL — layout improvements
+   ============================================================= */
+/* Make the detail modal single-column on the left for gallery,
+   info on right — no scroll needed for images */
+#project-detail-modal .modal-content {
+    max-height: 92vh;
+}
+
+/* =============================================================
+   GLOBAL SETTINGS MODAL — modern redesign
+   ============================================================= */
+
+/* Section dividers inside the settings form */
+.gs-section-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: #00f15e;
+    margin-bottom: 0.75rem;
+    margin-top: 0.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.gs-section-title::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: rgba(0,241,94,0.2);
+}
+body.theme-light .gs-section-title { color: #2563eb; }
+body.theme-light .gs-section-title::after { background: rgba(37,99,235,0.2); }
+
+/* Input group with icon prefix */
+.gs-input-group {
+    position: relative;
+}
+.gs-input-icon {
+    position: absolute;
+    left: 0.875rem;
+    top: 50%;
+    transform: translateY(-50%);
+    opacity: 0.4;
+    pointer-events: none;
+    width: 15px;
+    height: 15px;
+}
+.gs-input-group input {
+    padding-left: 2.5rem !important;
+}
+
+/* Override divider spacing for the new grouped layout */
+#global-settings-form .grid > div + div {
+    padding-top: 0;
+    border-top: none;
+}
+#global-settings-form .gs-group {
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 0.875rem;
+    padding: 1rem 1.25rem;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.875rem;
+}
+body.theme-light #global-settings-form .gs-group {
+    background: rgba(0,0,0,0.015);
+    border-color: rgba(0,0,0,0.06);
+}
+
+/* =============================================================
+   CONTACT SECTION — phone row
+   ============================================================= */
+.contact-phone-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.95rem;
+    opacity: 0.75;
+}
+.contact-phone-row.hidden { display: none; }

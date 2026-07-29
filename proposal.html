@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>عرض سعر | Robert Romany</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/feather-icons"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+    body { background:#050505; color:#e5e7eb; font-family:'Plus Jakarta Sans',sans-serif; min-height:100vh; }
+    .font-display { font-family:'Orbitron',sans-serif; }
+    .font-mono { font-family:'JetBrains Mono',monospace; }
+    .card { background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); border-radius:1rem; }
+    .accent { color:#00f15e; }
+    .btn-accent { background:#00f15e; color:#000; }
+    .btn-accent:hover { background:#00c74d; }
+    .item-row { display:flex; align-items:center; gap:12px; padding:14px; border-radius:0.75rem; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06); transition:opacity .2s ease, border-color .2s ease; }
+    .item-row.excluded { opacity:0.45; }
+    .item-checkbox { width:20px; height:20px; accent-color:#00f15e; flex-shrink:0; }
+    .base-chip { width:20px; height:20px; border-radius:6px; background:#00f15e; color:#000; display:flex; align-items:center; justify-content:center; font-size:12px; flex-shrink:0; }
+    ::selection { background:#00f15e; color:#000; }
+</style>
+</head>
+<body class="relative">
+    <div id="loading-state" class="min-h-screen flex flex-col items-center justify-center gap-4">
+        <div class="w-10 h-10 rounded-full border-2 border-white/10 border-t-[#00f15e] animate-spin"></div>
+        <p class="font-mono text-xs opacity-50 tracking-widest">LOADING PROPOSAL...</p>
+    </div>
+
+    <div id="not-found-state" class="hidden min-h-screen flex flex-col items-center justify-center gap-3 px-6 text-center">
+        <i data-feather="alert-circle" class="w-10 h-10 opacity-30"></i>
+        <p class="font-display text-lg">العرض غير موجود</p>
+        <p class="text-sm opacity-50">تأكد من اللينك اللي وصلك من الشركة، أو تواصل معنا لإرسال لينك جديد.</p>
+    </div>
+
+    <div id="locked-state" class="hidden min-h-screen flex flex-col items-center justify-center gap-3 px-6 text-center">
+        <i data-feather="lock" class="w-10 h-10 accent"></i>
+        <p class="font-display text-lg">تم إغلاق هذا العرض</p>
+        <p class="text-sm opacity-50 max-w-sm">العرض ده اتقفل ومبقاش متاح للتعديل أو الفتح تاني. لو محتاج نسخة تانية، تواصل مع الشركة اللي بعتتلك اللينك.</p>
+    </div>
+
+    <div id="proposal-view" class="hidden max-w-2xl mx-auto px-5 py-10 md:py-16">
+        <div class="mb-8">
+            <p class="font-mono text-xs tracking-[3px] accent mb-2">FINANCIAL PROPOSAL</p>
+            <h1 id="p-title" class="font-display text-2xl md:text-3xl font-black leading-snug"></h1>
+            <p id="p-client" class="text-sm opacity-50 mt-1"></p>
+        </div>
+
+        <div id="p-groups" class="space-y-7"></div>
+
+        <div class="card p-5 mt-6 flex items-center justify-between sticky bottom-4">
+            <span class="font-mono text-xs opacity-60 tracking-widest">TOTAL</span>
+            <span id="p-total" class="font-display text-2xl md:text-3xl font-black accent"></span>
+        </div>
+
+        <p id="p-notes" class="hidden text-xs opacity-50 leading-relaxed mt-5"></p>
+
+        <p class="text-center text-xs opacity-30 mt-10 font-mono">اختياراتك بتتحفظ تلقائيًا — هيتم إرسال نسخة PDF نهائية بعد إغلاق العرض من الشركة.</p>
+    </div>
+
+    <script type="module" src="proposal.js"></script>
+</body>
+</html>

@@ -3,6 +3,7 @@ import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.2.1/firebase
 import { initializeAppCheck, ReCaptchaV3Provider } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app-check.js";
 import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
 import { getFirestore, collection, getDocs, doc, setDoc, addDoc, updateDoc, deleteDoc, serverTimestamp, query, orderBy, writeBatch, getDoc, increment, where } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
+import { escapeHtml, formatMoney, recurrenceLabel, calcTotal, groupItemsByCategory, generateProposalPDF } from "./proposal-shared.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyC9c5yk7Smmjk3PRJgJm24PmXJfr0XpBlc",
@@ -24,9 +25,6 @@ const appCheck = initializeAppCheck(app, {
     isTokenAutoRefreshEnabled: true
 });
 
-// =====================================================
-//  TOAST NOTIFICATION SYSTEM
-// =====================================================
 function showToast(message, type = 'success', duration = 3500) {
     const container = document.getElementById('toast-container');
     const toast = document.createElement('div');
@@ -40,9 +38,6 @@ function showToast(message, type = 'success', duration = 3500) {
     }, duration);
 }
 
-// =====================================================
-//  LOADING SCREEN
-// =====================================================
 function initLoadingScreen() {
     const screen = document.getElementById('loading-screen');
     const bar = document.getElementById('loading-bar');
@@ -61,9 +56,6 @@ function initLoadingScreen() {
     setTimeout(() => screen.classList.add('fade-out'), 3000);
 }
 
-// =====================================================
-//  SCROLL PROGRESS BAR
-// =====================================================
 function initScrollProgress() {
     const bar = document.getElementById('scroll-progress');
     const backToTop = document.getElementById('back-to-top');
@@ -79,9 +71,6 @@ function initScrollProgress() {
     backToTop.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
 }
 
-// =====================================================
-//  MOBILE MENU
-// =====================================================
 function initMobileMenu() {
     const btn = document.getElementById('mobile-menu-btn');
     const menu = document.getElementById('mobile-menu');
@@ -103,13 +92,10 @@ function initMobileMenu() {
     });
 }
 
-// =====================================================
-//  TYPEWRITER EFFECT
-// =====================================================
 function initTypewriter() {
     const el = document.getElementById('typewriter');
     if (!el) return;
-        const texts = [
+    const texts = [
         'Android & (KMP\\CMP) Apps',
         'Kotlin Solutions ',
         'Jetpack Compose UI ',
@@ -128,9 +114,6 @@ function initTypewriter() {
     type();
 }
 
-// =====================================================
-//  ANIMATED STATS COUNTERS
-// =====================================================
 function animateCounter(el, target, duration = 1500) {
     const start = 0;
     const startTime = performance.now();
@@ -147,23 +130,27 @@ function animateCounter(el, target, duration = 1500) {
 function initStatsCounters() {
     const statsSection = document.getElementById('stats');
     if (!statsSection) return;
+
+    let fired = false;
+    function runCounters() {
+        const els = document.querySelectorAll('.stat-number[data-target]');
+        const anyNonZero = Array.from(els).some(el => parseInt(el.dataset.target) > 0);
+        if (!anyNonZero || fired) return;
+        fired = true;
+        els.forEach(el => {
+            const target = parseInt(el.dataset.target);
+            if (target > 0) animateCounter(el, target);
+        });
+    }
     const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                document.querySelectorAll('.stat-number[data-target]').forEach(el => {
-                    const target = parseInt(el.dataset.target);
-                    animateCounter(el, target);
-                });
-                observer.unobserve(entry.target);
-            }
+            if (entry.isIntersecting) runCounters();
         });
-    }, { threshold: 0.3 });
+    }, { threshold: 0.2 });
     observer.observe(statsSection);
+    window._retryStatsCounters = () => { fired = false; runCounters(); };
 }
 
-// =====================================================
-//  VISITOR COUNTER
-// =====================================================
 async function initVisitorCounter() {
     const display = document.getElementById('visitor-count-display');
     try {
@@ -171,14 +158,12 @@ async function initVisitorCounter() {
         const snap = await getDoc(counterRef);
         let count = snap.exists() ? (snap.data().count || 0) : 0;
 
-        // Only count once per session
         if (!sessionStorage.getItem('hasVisited')) {
             sessionStorage.setItem('hasVisited', 'true');
             await setDoc(counterRef, { count: increment(1) }, { merge: true });
             count++;
         }
 
-        // Animate the counter display
         if (display) {
             let shown = 0;
             const duration = 1200;
@@ -196,21 +181,16 @@ async function initVisitorCounter() {
     }
 }
 
-// =====================================================
-//  TESTIMONIALS
-// =====================================================
 async function loadTestimonials() {
     const grid = document.getElementById('testimonials-grid');
     const loader = document.getElementById('testimonials-loader');
 
     try {
-        // Try with orderBy first (needs composite index), fallback without it
         let snap;
         try {
             const q = query(collection(db, 'testimonials'), where('status', '==', 'approved'), orderBy('timestamp', 'desc'));
             snap = await getDocs(q);
         } catch {
-            // Fallback: just filter by status without ordering (no index needed)
             const q = query(collection(db, 'testimonials'), where('status', '==', 'approved'));
             snap = await getDocs(q);
         }
@@ -219,7 +199,11 @@ async function loadTestimonials() {
         grid.innerHTML = '';
 
         if (snap.empty) {
-            grid.innerHTML = '<p class="col-span-3 text-center text-gray-500 font-mono text-sm py-12">No reviews yet. Be the first! 🌟</p>';
+            const slide = document.createElement('div');
+            slide.className = 'swiper-slide';
+            slide.innerHTML = '<p class="text-center text-gray-500 font-mono text-sm py-12 w-full">No reviews yet. Be the first! 🌟</p>';
+            grid.appendChild(slide);
+            refreshTestimonialsSwiper();
             return;
         }
 
@@ -227,8 +211,12 @@ async function loadTestimonials() {
             const t = docSnap.data();
             const stars = '★'.repeat(t.rating || 5) + '☆'.repeat(5 - (t.rating || 5));
             const initials = (t.name || 'A').split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase();
+
+            const slide = document.createElement('div');
+            slide.className = 'swiper-slide';
+
             const card = document.createElement('div');
-            card.className = 'testimonial-card animate-on-scroll';
+            card.className = 'testimonial-card';
             card.innerHTML = `
                 <div class="testimonial-stars">${stars}</div>
                 <p class="testimonial-message">${escapeHtml(t.message)}</p>
@@ -242,16 +230,18 @@ async function loadTestimonials() {
                         <button class="delete-btn admin-btn" onclick="handleDeleteTestimonial('${docSnap.id}')">Delete</button>
                     </div>` : ''}
                 </div>`;
-            grid.appendChild(card);
+
+            slide.appendChild(card);
+            grid.appendChild(slide);
         });
 
-        // Re-observe new elements
-        document.querySelectorAll('.animate-on-scroll:not(.is-visible)').forEach(el => scrollObserver.observe(el));
+        refreshTestimonialsSwiper();
         feather.replace();
 
     } catch (e) {
         if (loader) loader.remove();
-        grid.innerHTML = '<p class="col-span-3 text-center text-gray-400 py-8">Unable to load reviews.</p>';
+        grid.innerHTML = '<div class="swiper-slide"><p class="text-center text-gray-400 py-8">Unable to load reviews.</p></div>';
+        refreshTestimonialsSwiper();
     }
 }
 
@@ -320,13 +310,6 @@ window.handleDeleteTestimonial = async (id, isPending = false) => {
     else loadTestimonials();
 };
 
-function escapeHtml(text) {
-    return String(text).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-}
-
-// =====================================================
-//  STAR RATING WIDGET
-// =====================================================
 function initStarRating() {
     const stars = document.querySelectorAll('#star-rating .star');
     const ratingInput = document.getElementById('t-rating');
@@ -347,12 +330,11 @@ function initStarRating() {
     });
 }
 
-// =====================================================
-//  THEMES
-// =====================================================
 let isAdmin = false;
 let projects = [];
 let scrollObserver;
+let projectsSwiper = null;
+let testimonialsSwiper = null;
 
 const themes = {
     dark: {
@@ -495,13 +477,13 @@ function applyTheme(themeName) {
     [
         'login-submit-btn', 'project-submit-btn', 'principle-submit-btn',
         'skill-submit-btn', 'about-submit-btn', 'text-edit-submit-btn',
-        'testimonial-submit-btn', 'timeline-submit-btn', 'stats-submit-btn'
+        'testimonial-submit-btn', 'timeline-submit-btn', 'stats-submit-btn',
+        'gs-submit-btn'
     ].forEach(id => {
         const el = document.getElementById(id);
         if (el) setClasses(el, theme.modalSubmit);
     });
 
-    // Logo accent color
     const accent = document.getElementById('nav-logo-accent');
     if (accent) accent.style.color = theme.navLogoAccent;
 
@@ -510,9 +492,6 @@ function applyTheme(themeName) {
     renderAllContent();
 }
 
-// =====================================================
-//  FIREBASE DATA LOADING
-// =====================================================
 async function loadAllData() {
     await Promise.all([
         loadSiteSettings(),
@@ -525,10 +504,8 @@ async function loadAllData() {
     ]);
 }
 
-// ── TIMELINE (fully editable) ─────────────────────
 async function loadTimeline() {
     const cont = document.getElementById('timeline-container');
-    // Clear only dynamic items, keep the timeline-line
     Array.from(cont.children).forEach(el => {
         if (!el.classList.contains('timeline-line')) el.remove();
     });
@@ -543,11 +520,9 @@ async function loadTimeline() {
         document.getElementById('timeline-loader')?.remove();
         if (snap.empty) { renderStaticTimeline(cont); return; }
 
-        // Extract all items and sort by first year in the year field (newest first)
         const items = [];
         snap.forEach(d => items.push({ id: d.id, ...d.data() }));
         items.sort((a, b) => {
-            // Extract first 4-digit year from strings like "2023 – Present", "2022 – 2023"
             const extractYear = str => {
                 const match = String(str || '').match(/\d{4}/);
                 return match ? parseInt(match[0]) : 0;
@@ -561,7 +536,7 @@ async function loadTimeline() {
             idx++;
         });
         feather.replace();
-        document.querySelectorAll('.animate-on-scroll:not(.is-visible)').forEach(e => scrollObserver && scrollObserver.observe(e));
+        refreshGsapScrollTriggers();
     } catch (e) { document.getElementById('timeline-loader')?.remove(); renderStaticTimeline(cont); }
 }
 
@@ -573,11 +548,12 @@ function renderStaticTimeline(cont) {
     ];
     defaults.forEach((item, i) => cont.appendChild(createTimelineCard(item, i % 2 === 0 ? 'timeline-left' : 'timeline-right')));
     feather.replace();
+    refreshGsapScrollTriggers();
 }
 
 function createTimelineCard(item, side) {
     const w = document.createElement('div');
-    w.className = `timeline-item ${side} animate-on-scroll`;
+    w.className = `timeline-item ${side} gsap-reveal`;
     w.innerHTML = `
         <div class="timeline-dot"></div>
         <div class="timeline-card">
@@ -596,19 +572,16 @@ function createTimelineCard(item, side) {
 
 window.handleEditTimeline = async id => {
     let data = {};
-    // Try to load from Firestore first
     try {
         const snap = await getDoc(doc(db, 'timeline', id));
         if (snap.exists()) data = snap.data();
     } catch {}
-    // Fallback: use static defaults for 's1','s2','s3'
     const statics = {
         s1: { year: '2023 – Present', role: 'Android Developer', company: 'Freelance', icon: 'briefcase', desc: 'Building production-ready Android apps using Kotlin, Jetpack Compose and Clean Architecture.', tags: ['Kotlin','Jetpack Compose','MVVM'] },
         s2: { year: '2022 – 2023', role: 'IEEE Vice Head', company: 'IEEE Student Branch', icon: 'users', desc: 'Technical leadership: workshops, events, and mentoring junior developers.', tags: ['Leadership','Mentoring','Android'] },
         s3: { year: '2020 – 2024', role: 'B.Sc. Computer Science', company: 'University', icon: 'book', desc: 'Software engineering, algorithms, data structures, and mobile development.', tags: ['CS','Software Engineering','Algorithms'] }
     };
     if (!data.role) data = statics[id] || {};
-    // Store the id — if it's a static one (s1/s2/s3), we'll save it as a new Firestore doc
     document.getElementById('timeline-id').value = id;
     document.getElementById('timeline-year').value    = data.year || data.date || '';
     document.getElementById('timeline-role').value    = data.role || data.title || '';
@@ -622,7 +595,6 @@ window.handleEditTimeline = async id => {
 
 window.handleDeleteTimeline = async id => {
     if (!confirm('Delete this item?')) return;
-    // If it's a static item (s1/s2/s3), just reload — no Firestore doc to delete
     if (!['s1','s2','s3'].includes(id)) {
         try { await deleteDoc(doc(db, 'timeline', id)); } catch(e) { console.error(e); }
     }
@@ -630,24 +602,25 @@ window.handleDeleteTimeline = async id => {
     showToast('Deleted.', 'info');
 };
 
+let _cachedGlobalSettings = {};
+
 async function loadSiteSettings() {
     try {
-        // Hero text
-        const snap = await getDoc(doc(db, 'site_content', 'hero'));
-        if (snap.exists()) {
-            const data = snap.data();
-            if (data.title)    document.getElementById('hero-name').textContent    = data.title;
-            if (data.subtitle) document.getElementById('hero-subtitle').textContent = data.subtitle;
+        const heroSnap = await getDoc(doc(db, 'site_content', 'hero'));
+        if (heroSnap.exists()) {
+            const d = heroSnap.data();
+            if (d.title)    document.getElementById('hero-name').textContent     = d.title;
+            if (d.subtitle) document.getElementById('hero-subtitle').textContent = d.subtitle;
         }
-        // About text & image
+
         const aboutSnap = await getDoc(doc(db, 'site_content', 'about'));
         if (aboutSnap.exists()) {
             const d = aboutSnap.data();
             if (d.text)     document.getElementById('about-text').textContent = d.text;
             if (d.imageUrl) document.getElementById('about-image').src        = d.imageUrl;
         }
-        // Stats numbers — always wait for Firestore, never show hardcoded defaults
-        const statsSnap = await getDoc(doc(db, 'site_content', 'stats'));
+
+        const statsSnap     = await getDoc(doc(db, 'site_content', 'stats'));
         const statYearsEl   = document.getElementById('stat-years');
         const statAppsEl    = document.getElementById('stat-apps');
         const statClientsEl = document.getElementById('stat-clients');
@@ -660,18 +633,88 @@ async function loadSiteSettings() {
             if (d.years   != null && statYearsEl)   { statYearsEl.dataset.target   = d.years;   statYearsEl.textContent   = '—'; }
             if (d.apps    != null && statAppsEl)    { statAppsEl.dataset.target    = d.apps;    statAppsEl.textContent    = '—'; }
             if (d.clients != null && statClientsEl) { statClientsEl.dataset.target = d.clients; statClientsEl.textContent = '—'; }
-            if (d.lines      && statLinesEl)    statLinesEl.textContent    = d.lines;
-            if (d.lblYears   && statLblYears)   statLblYears.textContent   = d.lblYears;
-            if (d.lblApps    && statLblApps)    statLblApps.textContent    = d.lblApps;
-            if (d.lblClients && statLblClients) statLblClients.textContent = d.lblClients;
+            if (d.lines      && statLinesEl)     statLinesEl.textContent    = d.lines;
+            if (d.lblYears   && statLblYears)    statLblYears.textContent   = d.lblYears;
+            if (d.lblApps    && statLblApps)     statLblApps.textContent    = d.lblApps;
+            if (d.lblClients && statLblClients)  statLblClients.textContent = d.lblClients;
         } else {
-            // No stats doc yet — hide the numbers until admin sets them
-            if (statYearsEl)   { statYearsEl.dataset.target = '0'; statYearsEl.textContent = '—'; }
-            if (statAppsEl)    { statAppsEl.dataset.target  = '0'; statAppsEl.textContent  = '—'; }
-            if (statClientsEl) { statClientsEl.dataset.target='0'; statClientsEl.textContent='—'; }
+            if (statYearsEl)   { statYearsEl.dataset.target  = '0'; statYearsEl.textContent   = '—'; }
+            if (statAppsEl)    { statAppsEl.dataset.target   = '0'; statAppsEl.textContent    = '—'; }
+            if (statClientsEl) { statClientsEl.dataset.target= '0'; statClientsEl.textContent = '—'; }
             if (statLinesEl)   statLinesEl.textContent = '—';
         }
+
+        try {
+            const gsSnap = await getDoc(doc(db, 'site_content', 'global_settings'));
+            _cachedGlobalSettings = gsSnap.exists() ? gsSnap.data() : {};
+            if (gsSnap.exists()) applyGlobalSettings(_cachedGlobalSettings);
+        } catch (gsErr) {
+            console.warn('loadSiteSettings — global_settings fetch failed:', gsErr);
+            _cachedGlobalSettings = {};
+        }
+
+        if (typeof window._retryStatsCounters === 'function') window._retryStatsCounters();
+
     } catch (e) { console.warn('loadSiteSettings:', e); }
+}
+
+function applyGlobalSettings(d) {
+    if (!d) return;
+
+    if (d.cvLink) {
+        ['#cv-download-btn', '#about-cv-btn'].forEach(sel => {
+            const el = document.querySelector(sel);
+            if (el) el.href = d.cvLink;
+        });
+    }
+
+    if (d.linkedin) {
+        ['#social-linkedin', '#footer-linkedin'].forEach(sel => {
+            const el = document.querySelector(sel);
+            if (el) el.href = d.linkedin;
+        });
+    }
+    if (d.github) {
+        ['#social-github', '#footer-github'].forEach(sel => {
+            const el = document.querySelector(sel);
+            if (el) el.href = d.github;
+        });
+    }
+    if (d.facebook) {
+        ['#social-facebook', '#footer-facebook'].forEach(sel => {
+            const el = document.querySelector(sel);
+            if (el) el.href = d.facebook;
+        });
+    }
+
+    if (d.contactEmail) {
+        const emailTextEl  = document.getElementById('email-text');
+        const mailtoBtn    = document.getElementById('mailto-btn');
+        if (emailTextEl) emailTextEl.textContent = d.contactEmail;
+        if (mailtoBtn)   mailtoBtn.href = `mailto:${d.contactEmail}`;
+    }
+
+    if (d.phone) {
+        const phoneEl = document.getElementById('contact-phone');
+        if (phoneEl) { phoneEl.textContent = d.phone; phoneEl.closest('.contact-phone-row')?.classList.remove('hidden'); }
+    }
+
+    if (d.heroSubtitle) {
+        const hsEl = document.getElementById('hero-subtitle');
+        if (hsEl) hsEl.textContent = d.heroSubtitle;
+    }
+
+    if (d.aboutImageUrl) {
+        const aiEl = document.getElementById('about-image');
+        if (aiEl) aiEl.src = d.aboutImageUrl;
+    }
+
+    if (d.footerText) {
+        const ft = document.getElementById('footer-text');
+        if (ft) {
+            ft.innerHTML = `&copy; <span id="year">${new Date().getFullYear()}</span> ${escapeHtml(d.footerText)}`;
+        }
+    }
 }
 
 async function loadPrinciples() {
@@ -690,6 +733,7 @@ async function loadPrinciples() {
             grid.appendChild(createPrincipleCard(p, theme));
         });
         feather.replace();
+        refreshGsapScrollTriggers();
     } catch (e) {
         if (loader) loader.remove();
         grid.innerHTML = '<p class="col-span-3 text-center text-gray-400 py-8">Unable to load principles.</p>';
@@ -698,7 +742,7 @@ async function loadPrinciples() {
 
 function createPrincipleCard(p, theme) {
     const card = document.createElement('div');
-    card.className = `principle-card p-6 ${theme.principleCard}`;
+    card.className = `principle-card p-6 gsap-reveal ${theme.principleCard}`;
     card.innerHTML = `
         <div class="flex justify-between items-start mb-4">
             <i data-feather="${p.icon || 'star'}" class="w-8 h-8 ${theme.principleIcon}"></i>
@@ -721,12 +765,12 @@ async function loadSkills() {
         catch { snap = await getDocs(collection(db, 'skills')); }
         if (loader) loader.remove();
         container.innerHTML = '';
-        const themeName = localStorage.getItem('portfolioTheme') || 'dark';
         snap.forEach(docSnap => {
             const s = { id: docSnap.id, ...docSnap.data() };
             container.appendChild(createSkillItem(s));
         });
         feather.replace();
+        refreshGsapScrollTriggers();
     } catch (e) {
         if (loader) loader.remove();
     }
@@ -734,7 +778,7 @@ async function loadSkills() {
 
 function createSkillItem(s) {
     const item = document.createElement('div');
-    item.className = 'skill-item flex flex-col items-center gap-2 text-center';
+    item.className = 'skill-item flex flex-col items-center gap-2 text-center gsap-reveal';
     item.innerHTML = `
         <i class="${s.iconClass} text-5xl colored"></i>
         <span class="text-xs font-medium opacity-70">${s.name}</span>
@@ -749,31 +793,91 @@ async function loadProjects() {
     const grid = document.getElementById('projects-grid');
     const loader = document.getElementById('projects-loader');
     try {
-        // Fallback: if 'order' field missing on old docs, getDocs without orderBy
         let snap;
         try { snap = await getDocs(query(collection(db, 'projects'), orderBy('createdAt', 'desc'))); }
         catch { snap = await getDocs(collection(db, 'projects')); }
         if (loader) loader.remove();
+
         grid.innerHTML = '';
+
         const themeName = localStorage.getItem('portfolioTheme') || 'dark';
         const theme = themes[themeName];
         projects = [];
         snap.forEach(docSnap => {
             const p = { id: docSnap.id, ...docSnap.data() };
             projects.push(p);
-            grid.appendChild(createProjectCard(p, theme));
+
+            const slide = document.createElement('div');
+            slide.className = 'swiper-slide';
+            slide.appendChild(createProjectCard(p, theme));
+            grid.appendChild(slide);
         });
+
+        refreshProjectsSwiper();
         feather.replace();
     } catch (e) {
         if (loader) loader.remove();
-        grid.innerHTML = '<p class="col-span-3 text-center text-gray-400 py-8">Unable to load projects.</p>';
+        grid.innerHTML = '<div class="swiper-slide"><p class="text-center text-gray-400 py-8">Unable to load projects.</p></div>';
+        refreshProjectsSwiper();
     }
 }
+
+const PLATFORM_BADGE_MAP = {
+    android: 'badge-android',
+    ios:     'badge-ios',
+    desktop: 'badge-desktop',
+    web:     'badge-web',
+    kmp:     'badge-kmp',
+    cmp:     'badge-cmp',
+};
+
+const PLATFORM_LABELS = {
+    android: 'Android',
+    ios:     'iOS',
+    desktop: 'Desktop',
+    web:     'Web',
+    kmp:     'KMP',
+    cmp:     'CMP',
+};
+
+function buildPlatformBadgesHtml(platforms = []) {
+    return platforms
+        .map(p => {
+            const cls = PLATFORM_BADGE_MAP[p] || '';
+            const label = PLATFORM_LABELS[p] || p;
+            return `<span class="platform-badge ${cls}">${label}</span>`;
+        })
+        .join('');
+}
+
+function isMultiPlatform(p) {
+    return (
+        Array.isArray(p.platforms) &&
+        p.platforms.length > 1 &&
+        Array.isArray(p.images) &&
+        p.images.length > 0
+    );
+}
+
+const FRAME_CLASS_MAP = {
+    android: 'frame-android',
+    ios:     'frame-ios',
+    desktop: 'frame-laptop',
+    kmp:     'frame-android', 
+    cmp:     'frame-android', 
+    web:     'frame-laptop',
+};
 
 function createProjectCard(p, theme) {
     const card = document.createElement('div');
     card.className = `project-card ${theme.projectCard} cursor-pointer`;
     card.onclick = () => showProjectDetails(p.id);
+
+    const badgesHtml = buildPlatformBadgesHtml(p.platforms || []);
+    const badgesRow = badgesHtml
+        ? `<div class="flex flex-wrap gap-1.5 mb-3">${badgesHtml}</div>`
+        : '';
+
     card.innerHTML = `
         <img src="${p.thumbnail || 'https://placehold.co/600x400'}" alt="${p.title}" class="w-full h-72 object-cover">
         <div class="p-5">
@@ -784,16 +888,17 @@ function createProjectCard(p, theme) {
                     <button class="delete-btn admin-btn" onclick="handleDeleteProject('${p.id}')">Del</button>
                 </div>` : ''}
             </div>
+            ${badgesRow}
             <p class="text-sm opacity-60 leading-relaxed mb-4 line-clamp-2">${p.description}</p>
             <div class="flex flex-wrap gap-1.5">
                 ${(p.technologies || []).slice(0, 4).map(t => `<span class="tech-badge text-xs px-2 py-0.5 rounded-md font-mono">${t}</span>`).join('')}
                 ${(p.technologies || []).length > 4 ? `<span class="tech-badge text-xs px-2 py-0.5 rounded-md font-mono">+${p.technologies.length - 4}</span>` : ''}
             </div>
         </div>`;
-    // Tech badge styling
+
     card.querySelectorAll('.tech-badge').forEach(b => {
-        const themeName = localStorage.getItem('portfolioTheme') || 'dark';
-        if (themeName === 'dark') {
+        const tn = localStorage.getItem('portfolioTheme') || 'dark';
+        if (tn === 'dark') {
             b.style.cssText = 'background:rgba(0,241,94,0.08);color:#00f15e;border:1px solid rgba(0,241,94,0.15)';
         } else {
             b.style.cssText = 'background:rgba(37,99,235,0.08);color:#2563eb;border:1px solid rgba(37,99,235,0.15)';
@@ -814,9 +919,6 @@ function renderAllContent() {
     if (timelineLoaded)   loadTimeline();
 }
 
-// =====================================================
-//  ADMIN CRUD HANDLERS
-// =====================================================
 window.handleEditPrinciple = async (id) => {
     const p = (await getDoc(doc(db, 'principles', id))).data();
     document.getElementById('principle-id').value = id;
@@ -862,6 +964,15 @@ window.handleEditProject = async (id) => {
     document.getElementById('project-tech').value = (p.technologies || []).join(', ');
     document.getElementById('project-source-link').value = p.sourceLink || '';
     document.getElementById('project-live-link').value = p.liveLink || '';
+
+    const storedPlatforms = (p.platforms || []).map(v => String(v).toLowerCase());
+    document.querySelectorAll('#project-platform-selector .platform-checkbox').forEach(cb => {
+        const isChecked = storedPlatforms.includes(cb.value.toLowerCase());
+        cb.checked = isChecked;
+        const badge = cb.nextElementSibling;
+        if (badge) badge.style.outline = isChecked ? '2px solid currentColor' : '';
+    });
+
     const imagesContainer = document.getElementById('additional-images-container');
     imagesContainer.innerHTML = '';
     (p.images || []).forEach(img => addImageRow(img.url, img.description));
@@ -878,59 +989,236 @@ window.handleDeleteProject = async (id) => {
     }
 };
 
+let _detailSlideshowTimer = null;
+
 window.showProjectDetails = (id) => {
     const project = projects.find(p => p.id === id);
     if (!project) return;
+
     const themeName = localStorage.getItem('portfolioTheme') || 'dark';
     const theme = themes[themeName];
-    document.getElementById('detail-title').innerText = project.title;
-    document.getElementById('detail-description').innerText = project.description;
-    const mainImage = document.getElementById('detail-main-image');
-    const imageDesc = document.getElementById('detail-image-description');
-    const thumbnailsContainer = document.getElementById('detail-thumbnails');
-    thumbnailsContainer.innerHTML = '';
-    const allImages = [{ url: project.thumbnail, description: 'Project Thumbnail' }, ...(project.images || [])];
-
-    function updateMainImage(imgObj) {
-        mainImage.src = imgObj.url;
-        imageDesc.textContent = imgObj.description || '';
-    }
-    updateMainImage(allImages[0]);
-    allImages.forEach(imgObj => {
-        const thumb = document.createElement('img');
-        thumb.src = imgObj.url;
-        thumb.className = 'gallery-thumbnail w-20 h-16 object-cover rounded-lg';
-        if (imgObj.url === mainImage.src) thumb.classList.add('active', theme.activeThumb);
-        thumb.addEventListener('click', () => {
-            updateMainImage(imgObj);
-            document.querySelectorAll('.gallery-thumbnail').forEach(t => t.classList.remove('active', ...Object.values(themes).map(t => t.activeThumb)));
-            thumb.classList.add('active', theme.activeThumb);
-        });
-        thumbnailsContainer.appendChild(thumb);
-    });
-
     const isLight = themeName === 'light';
+
+    if (_detailSlideshowTimer) { clearInterval(_detailSlideshowTimer); _detailSlideshowTimer = null; }
+
+    document.getElementById('detail-title').innerText = project.title;
+    const badgesContainer = document.getElementById('detail-platform-badges');
+    if (badgesContainer) badgesContainer.innerHTML = buildPlatformBadgesHtml(project.platforms || []);
+
+    const allImages = [
+        { url: project.thumbnail, description: 'Project Thumbnail' },
+        ...(project.images || [])
+    ].filter(img => img && img.url);
+
+    const mockupArea = document.getElementById('detail-mockup-area');
+    mockupArea.innerHTML = '';
+
+    if (allImages.length > 0) {
+        const gallery = document.createElement('div');
+        gallery.className = 'detail-gallery';
+
+        const mainImgWrap = document.createElement('div');
+        mainImgWrap.className = 'detail-gallery-main';
+
+        const mainImg = document.createElement('img');
+        mainImg.src = allImages[0].url;
+        mainImg.alt = allImages[0].description || project.title;
+        mainImg.className = 'detail-gallery-img';
+        mainImgWrap.appendChild(mainImg);
+
+        if (allImages.length > 1) {
+            const prevBtn = document.createElement('button');
+            prevBtn.className = 'detail-gallery-arrow detail-gallery-prev';
+            prevBtn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>';
+            const nextBtn = document.createElement('button');
+            nextBtn.className = 'detail-gallery-arrow detail-gallery-next';
+            nextBtn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>';
+            mainImgWrap.appendChild(prevBtn);
+            mainImgWrap.appendChild(nextBtn);
+
+            const dotsWrap = document.createElement('div');
+            dotsWrap.className = 'detail-gallery-dots';
+            allImages.forEach((_, i) => {
+                const dot = document.createElement('button');
+                dot.className = 'detail-gallery-dot' + (i === 0 ? ' active' : '');
+                dot.dataset.idx = i;
+                dotsWrap.appendChild(dot);
+            });
+            mainImgWrap.appendChild(dotsWrap);
+
+            let currentIdx = 0;
+            function goTo(idx, animate = true) {
+                currentIdx = (idx + allImages.length) % allImages.length;
+                if (animate) mainImg.classList.add('detail-gallery-fade');
+                setTimeout(() => {
+                    mainImg.src = allImages[currentIdx].url;
+                    mainImg.alt = allImages[currentIdx].description || '';
+                    mainImg.classList.remove('detail-gallery-fade');
+                }, animate ? 180 : 0);
+                dotsWrap.querySelectorAll('.detail-gallery-dot').forEach((d, i) =>
+                    d.classList.toggle('active', i === currentIdx)
+                );
+                document.querySelectorAll('.gallery-thumbnail').forEach((t, i) => {
+                    t.classList.toggle('active', i === currentIdx);
+                    t.classList.toggle(theme.activeThumb, i === currentIdx);
+                });
+            }
+
+            prevBtn.addEventListener('click', () => { goTo(currentIdx - 1); resetSlideshow(); });
+            nextBtn.addEventListener('click', () => { goTo(currentIdx + 1); resetSlideshow(); });
+            dotsWrap.addEventListener('click', e => {
+                const dot = e.target.closest('.detail-gallery-dot');
+                if (dot) { goTo(parseInt(dot.dataset.idx)); resetSlideshow(); }
+            });
+
+            function startSlideshow() {
+                _detailSlideshowTimer = setInterval(() => goTo(currentIdx + 1), 3500);
+            }
+            function resetSlideshow() {
+                clearInterval(_detailSlideshowTimer);
+                startSlideshow();
+            }
+            startSlideshow();
+
+            gallery._goTo = goTo;
+            gallery._resetSlideshow = resetSlideshow;
+        }
+
+        gallery.appendChild(mainImgWrap);
+
+        if (allImages.length > 1) {
+            const thumbStrip = document.createElement('div');
+            thumbStrip.className = 'detail-thumb-strip';
+            allImages.forEach((imgObj, idx) => {
+                const thumb = document.createElement('img');
+                thumb.src = imgObj.url;
+                thumb.alt = imgObj.description || '';
+                thumb.className = 'gallery-thumbnail' + (idx === 0 ? ' active ' + theme.activeThumb : '');
+                thumb.addEventListener('click', () => {
+                    if (gallery._goTo) gallery._goTo(idx);
+                    if (gallery._resetSlideshow) gallery._resetSlideshow();
+                });
+                thumbStrip.appendChild(thumb);
+            });
+            gallery.appendChild(thumbStrip);
+        }
+
+        mockupArea.appendChild(gallery);
+    }
+
+    const platforms = project.platforms || [];
+    if (platforms.length > 0) {
+        const frameWrap = document.createElement('div');
+        frameWrap.className = 'detail-frame-strip';
+
+        if (isMultiPlatform(project)) {
+            const primaryPlatform   = platforms[0] || 'android';
+            const secondaryPlatform = platforms[1] || 'desktop';
+            const pFrame = FRAME_CLASS_MAP[primaryPlatform]   || 'frame-android';
+            const sFrame = FRAME_CLASS_MAP[secondaryPlatform] || 'frame-laptop';
+            const pLabel = PLATFORM_LABELS[primaryPlatform]   || primaryPlatform;
+            const sLabel = PLATFORM_LABELS[secondaryPlatform] || secondaryPlatform;
+            const pSrc   = project.thumbnail || 'https://placehold.co/300x600';
+            const sSrc   = (project.images || [])[0]?.url || 'https://placehold.co/600x400';
+
+            const pair = document.createElement('div');
+            pair.className = 'device-mockup-pair';
+            pair.innerHTML = `
+                <div class="device-frame ${pFrame}">
+                    <div class="frame-screen"><img src="${pSrc}" alt="${pLabel}" class="mockup-screen-img"></div>
+                    <span class="frame-label">${pLabel}</span>
+                </div>
+                <div class="device-frame ${sFrame}">
+                    <div class="frame-screen"><img src="${sSrc}" alt="${sLabel}" class="mockup-screen-img"></div>
+                    <span class="frame-label">${sLabel}</span>
+                </div>`;
+            frameWrap.appendChild(pair);
+        } else {
+            const singlePlatform = platforms[0];
+            const frameClass = FRAME_CLASS_MAP[singlePlatform];
+            if (frameClass) {
+                const single = document.createElement('div');
+                single.className = 'device-mockup-single';
+                single.innerHTML = `
+                    <div class="device-frame ${frameClass}">
+                        <div class="frame-screen"><img src="${project.thumbnail || ''}" alt="App screen" class="mockup-screen-img"></div>
+                        <span class="frame-label">${PLATFORM_LABELS[singlePlatform] || ''}</span>
+                    </div>`;
+                frameWrap.appendChild(single);
+            }
+        }
+        if (frameWrap.children.length) mockupArea.appendChild(frameWrap);
+    }
+
+    document.getElementById('detail-description').innerText = project.description;
+
     document.getElementById('detail-tech').innerHTML = (project.technologies || [])
-        .map(t => `<span class="${isLight ? 'bg-blue-50 text-blue-600' : 'bg-gray-800 text-green-400'} text-sm font-semibold px-3 py-1 rounded-full font-mono">${t}</span>`).join('');
+        .map(t => `<span class="${isLight ? 'bg-blue-50 text-blue-600' : 'bg-gray-800 text-green-400'} text-sm font-semibold px-3 py-1 rounded-full font-mono">${t}</span>`)
+        .join('');
 
     const linksContainer = document.getElementById('detail-links');
     linksContainer.innerHTML = '';
     if (project.sourceLink) {
-        const a = document.createElement('a'); a.href = project.sourceLink; a.target = '_blank';
-        a.innerText = 'Source Code'; a.className = `font-bold py-2 px-4 rounded-xl transition ${theme.detailLinkSource}`;
+        const a = document.createElement('a');
+        a.href = project.sourceLink; a.target = '_blank';
+        a.innerText = 'Source Code';
+        a.className = `font-bold py-2 px-4 rounded-xl transition ${theme.detailLinkSource}`;
         linksContainer.appendChild(a);
     }
     if (project.liveLink) {
-        const a = document.createElement('a'); a.href = project.liveLink; a.target = '_blank';
-        a.innerText = 'Live Link'; a.className = `font-bold py-2 px-4 rounded-xl transition ${theme.detailLinkLive}`;
+        const a = document.createElement('a');
+        a.href = project.liveLink; a.target = '_blank';
+        a.innerText = 'Live / Play Store';
+        a.className = `font-bold py-2 px-4 rounded-xl transition ${theme.detailLinkLive}`;
         linksContainer.appendChild(a);
     }
+
+    generateProjectQRCode(project, isLight);
+
     openModal('project-detail-modal');
 };
 
-// =====================================================
-//  MODAL HELPERS
-// =====================================================
+function generateProjectQRCode(project, isLight) {
+    const linksContainer = document.getElementById('detail-links');
+    if (!linksContainer) return;
+
+    const oldQr = document.getElementById('project-qr-block');
+    if (oldQr) oldQr.remove();
+
+    if (!project.liveLink) return; 
+
+    const qrBlock = document.createElement('div');
+    qrBlock.id = 'project-qr-block';
+    qrBlock.className = 'mt-4 flex flex-col items-start gap-2';
+    qrBlock.innerHTML = `
+        <p class="text-xs font-mono opacity-50 tracking-widest uppercase">Scan to open</p>
+        <div id="qrcode-canvas"
+             class="rounded-xl overflow-hidden border ${isLight ? 'border-slate-200' : 'border-gray-700'}"
+             style="width:100px;height:100px;display:flex;align-items:center;justify-content:center;">
+        </div>`;
+    linksContainer.appendChild(qrBlock);
+
+    setTimeout(() => {
+        const canvas = document.getElementById('qrcode-canvas');
+        if (!canvas) return;
+        canvas.innerHTML = ''; 
+
+        try {
+            new QRCode(canvas, {
+                text: project.liveLink,
+                width:  96,
+                height: 96,
+                colorDark:  isLight ? '#1e293b' : '#ffffff',
+                colorLight: isLight ? '#f8fafc' : '#0a0a0a',
+                correctLevel: QRCode.CorrectLevel.M,
+            });
+        } catch (err) {
+            console.warn('QRCode generation failed:', err);
+            canvas.innerHTML = '<p class="text-xs opacity-40 p-2">QR unavailable</p>';
+        }
+    }, 50);
+}
+
 function openModal(id) {
     const modal = document.getElementById(id);
     modal.classList.remove('hidden');
@@ -942,6 +1230,10 @@ function closeModal(id) {
     const modal = document.getElementById(id);
     modal.querySelector('.modal-content').classList.add('scale-95');
     setTimeout(() => modal.classList.add('hidden'), 300);
+    if (id === 'project-detail-modal' && _detailSlideshowTimer) {
+        clearInterval(_detailSlideshowTimer);
+        _detailSlideshowTimer = null;
+    }
 }
 
 function addImageRow(url = '', description = '') {
@@ -957,9 +1249,207 @@ function addImageRow(url = '', description = '') {
     feather.replace();
 }
 
-// =====================================================
-//  FORM SUBMISSIONS
-// =====================================================
+function initProjectsSwiper() {
+    if (projectsSwiper) {
+        projectsSwiper.destroy(true, true);
+        projectsSwiper = null;
+    }
+    projectsSwiper = new Swiper('.projects-swiper', {
+        slidesPerView: 1,
+        spaceBetween: 24,
+        grabCursor: true,
+        loop: false,
+        touchRatio: 1,
+        simulateTouch: true,
+        touchStartPreventDefault: false,
+        breakpoints: {
+            640: {
+                slidesPerView: 2,
+                spaceBetween: 20,
+            },
+            1024: {
+                slidesPerView: 3,
+                spaceBetween: 24,
+            },
+        },
+        navigation: {
+            nextEl: '.projects-swiper-next',
+            prevEl: '.projects-swiper-prev',
+        },
+        pagination: {
+            el: '.projects-swiper-pagination',
+            clickable: true,
+        },
+        a11y: {
+            prevSlideMessage: 'Previous project',
+            nextSlideMessage: 'Next project',
+        },
+    });
+}
+
+function refreshProjectsSwiper() {
+    setTimeout(initProjectsSwiper, 50);
+}
+
+function initTestimonialsSwiper() {
+    if (testimonialsSwiper) {
+        testimonialsSwiper.destroy(true, true);
+        testimonialsSwiper = null;
+    }
+    testimonialsSwiper = new Swiper('.testimonials-swiper', {
+        slidesPerView: 1,
+        spaceBetween: 24,
+        grabCursor: true,
+        loop: false,
+        centeredSlides: false,
+        touchRatio: 1,
+        simulateTouch: true,
+        touchStartPreventDefault: false,
+        autoplay: {
+            delay: 5000,
+            disableOnInteraction: true,
+            pauseOnMouseEnter: true,
+        },
+        breakpoints: {
+            640: {
+                slidesPerView: 2,
+                spaceBetween: 20,
+            },
+            1024: {
+                slidesPerView: 3,
+                spaceBetween: 24,
+            },
+        },
+        pagination: {
+            el: '.testimonials-swiper-pagination',
+            clickable: true,
+        },
+        a11y: {
+            prevSlideMessage: 'Previous review',
+            nextSlideMessage: 'Next review',
+        },
+    });
+}
+
+function refreshTestimonialsSwiper() {
+    setTimeout(initTestimonialsSwiper, 50);
+}
+
+function initGsapAnimations() {
+    if (typeof gsap === 'undefined' || typeof ScrollTrigger === 'undefined') {
+        console.warn('GSAP / ScrollTrigger not loaded. Falling back to CSS observer.');
+        return;
+    }
+
+    gsap.registerPlugin(ScrollTrigger);
+
+    const heroTl = gsap.timeline({ defaults: { ease: 'power3.out' } });
+    heroTl
+        .from('.hero-greeting',  { opacity: 0, y: 20, duration: 0.6 }, 0.2)
+        .from('#hero-title',     { opacity: 0, y: 40, duration: 0.8 }, 0.4)
+        .from('#hero-subtitle',  { opacity: 0, y: 30, duration: 0.7 }, 0.7)
+        .from('#hero-socials',   { opacity: 0, y: 20, duration: 0.6 }, 1.0)
+        .from('.scroll-down-btn',{ opacity: 0, y: 15, duration: 0.5 }, 1.2);
+
+    const sectionHeadings = gsap.utils.toArray([
+        '#about', '#timeline', '#principles', '#skills',
+        '#projects', '#testimonials', '#contact'
+    ]);
+    sectionHeadings.forEach(section => {
+        const label     = section.querySelector('.section-label');
+        const heading   = section.querySelector('.section-heading');
+        const underline = section.querySelector('.section-title-underline');
+        const targets   = [label, heading, underline].filter(Boolean);
+        if (!targets.length) return;
+
+        gsap.from(targets, {
+            opacity: 0,
+            y: 35,
+            duration: 0.75,
+            stagger: 0.12,
+            ease: 'power3.out',
+            scrollTrigger: {
+                trigger: section,
+                start: 'top 80%',
+                once: true,
+            },
+        });
+    });
+
+    gsap.from('.stat-card', {
+        opacity: 0,
+        y: 40,
+        scale: 0.95,
+        duration: 0.65,
+        stagger: 0.1,
+        ease: 'back.out(1.4)',
+        scrollTrigger: {
+            trigger: '#stats',
+            start: 'top 80%',
+            once: true,
+        },
+    });
+
+    gsap.from('.about-image-wrapper', {
+        opacity: 0,
+        x: -60,
+        duration: 0.9,
+        ease: 'power3.out',
+        scrollTrigger: { trigger: '#about', start: 'top 75%', once: true },
+    });
+    gsap.from('#about .md\\:w-2\\/3', {
+        opacity: 0,
+        x: 60,
+        duration: 0.9,
+        ease: 'power3.out',
+        scrollTrigger: { trigger: '#about', start: 'top 75%', once: true },
+    });
+
+    gsap.from('#skills-container .skill-item', {
+        opacity: 0,
+        y: 30,
+        scale: 0.8,
+        duration: 0.5,
+        stagger: { each: 0.06, from: 'start' },
+        ease: 'back.out(1.7)',
+        scrollTrigger: { trigger: '#skills', start: 'top 75%', once: true },
+    });
+
+    gsap.from('#contact .section-heading, #contact p, #email-container, #mailto-btn', {
+        opacity: 0,
+        y: 30,
+        duration: 0.65,
+        stagger: 0.1,
+        ease: 'power3.out',
+        scrollTrigger: { trigger: '#contact', start: 'top 80%', once: true },
+    });
+
+    ScrollTrigger.batch('.gsap-reveal', {
+        onEnter: batch => gsap.fromTo(batch,
+            { opacity: 0, y: 40 },
+            { opacity: 1, y: 0, duration: 0.65, stagger: 0.1, ease: 'power3.out', overwrite: true }
+        ),
+        once: true,
+        start: 'top 85%',
+    });
+}
+
+function refreshGsapScrollTriggers() {
+    if (typeof ScrollTrigger === 'undefined') return;
+    ScrollTrigger.refresh();
+    ScrollTrigger.batch('.gsap-reveal:not([data-gsap-done])', {
+        onEnter: batch => {
+            batch.forEach(el => el.setAttribute('data-gsap-done', '1'));
+            gsap.fromTo(batch,
+                { opacity: 0, y: 40 },
+                { opacity: 1, y: 0, duration: 0.65, stagger: 0.1, ease: 'power3.out', overwrite: true }
+            );
+        },
+        once: true,
+        start: 'top 88%',
+    });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     feather.replace();
     initLoadingScreen();
@@ -969,7 +1459,6 @@ document.addEventListener('DOMContentLoaded', () => {
     initStatsCounters();
     initStarRating();
 
-    // Theme switcher
     document.querySelectorAll('.theme-btn').forEach(btn => {
         btn.addEventListener('click', () => applyTheme(btn.dataset.theme));
     });
@@ -978,24 +1467,39 @@ document.addEventListener('DOMContentLoaded', () => {
     applyTheme(savedTheme);
     loadAllData();
 
-    // Auth state
+    setTimeout(initGsapAnimations, 100);
+
+    document.querySelectorAll('#project-platform-selector .platform-checkbox').forEach(cb => {
+        cb.addEventListener('change', () => {
+            const badge = cb.nextElementSibling;
+            if (badge) badge.style.outline = cb.checked ? '2px solid currentColor' : '';
+        });
+    });
+
     onAuthStateChanged(auth, user => {
         isAdmin = !!user;
         document.getElementById('login-btn').classList.toggle('hidden', isAdmin);
         document.getElementById('logout-btn').classList.toggle('hidden', !isAdmin);
-        // Show/hide ALL admin buttons
-        ['add-project-btn','add-principle-btn','add-skill-btn','add-timeline-btn','edit-stats-btn'].forEach(id => {
+
+        ['add-project-btn','add-principle-btn','add-skill-btn','add-timeline-btn','edit-stats-btn','proposals-btn'].forEach(id => {
             const b = document.getElementById(id);
             if (b) b.classList.toggle('hidden', !isAdmin);
         });
-        // About edit button - always visible for admin, hidden for guests
+
         const editAboutBtn = document.getElementById('edit-about-btn');
-        if (editAboutBtn) {
-            editAboutBtn.style.display = isAdmin ? 'flex' : 'none';
-        }
+        if (editAboutBtn) editAboutBtn.style.display = isAdmin ? 'flex' : 'none';
+
         if (isAdmin) {
-            // Add testimonials admin button to navbar area
-            const navLogoAccent = document.getElementById('nav-logo-accent');
+            if (!document.getElementById('global-settings-nav-btn')) {
+                const gsNavBtn = document.createElement('button');
+                gsNavBtn.id = 'global-settings-nav-btn';
+                gsNavBtn.className = 'text-xs font-mono text-purple-400 hover:text-purple-300 transition hidden md:inline-flex items-center gap-1';
+                gsNavBtn.innerHTML = '<i data-feather="settings" class="w-3 h-3"></i><span>Settings</span>';
+                gsNavBtn.addEventListener('click', () => openGlobalSettingsModal());
+                document.getElementById('logout-btn').before(gsNavBtn);
+                feather.replace();
+            }
+
             if (!document.getElementById('testimonials-admin-btn')) {
                 const btn = document.createElement('button');
                 btn.id = 'testimonials-admin-btn';
@@ -1007,11 +1511,30 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
                 document.getElementById('logout-btn').before(btn);
             }
+
+            if (!document.getElementById('proposals-admin-btn')) {
+                const propBtn = document.createElement('button');
+                propBtn.id = 'proposals-admin-btn';
+                propBtn.className = 'text-xs font-mono text-green-400 hover:text-green-300 transition hidden md:inline-flex items-center gap-1';
+                propBtn.innerHTML = '<i data-feather="dollar-sign" class="w-3 h-3"></i><span>Proposals</span>';
+                propBtn.addEventListener('click', () => {
+                    if (typeof window.openAdminProposals === 'function') {
+                        window.openAdminProposals();
+                    }
+                });
+                document.getElementById('logout-btn').before(propBtn);
+                feather.replace();
+            }
+
+        } else {
+            ['global-settings-nav-btn', 'testimonials-admin-btn', 'proposals-admin-btn'].forEach(id => {
+                document.getElementById(id)?.remove();
+            });
         }
+
         renderAllContent();
     });
 
-    // Login
     document.getElementById('login-btn').addEventListener('click', () => openModal('login-modal'));
     document.getElementById('login-form').addEventListener('submit', async e => {
         e.preventDefault();
@@ -1032,41 +1555,51 @@ document.addEventListener('DOMContentLoaded', () => {
         showToast('Logged out.', 'info');
     });
 
-    // Close modals
     document.querySelectorAll('.modal-overlay').forEach(modal => {
         modal.addEventListener('click', e => {
             if (e.target === modal || e.target.classList.contains('modal-close')) closeModal(modal.id);
         });
     });
 
-    // Project form
     document.getElementById('project-form').addEventListener('submit', async e => {
         e.preventDefault();
         const btn = document.getElementById('project-submit-btn');
         document.getElementById('project-submit-text').textContent = 'Saving...';
         btn.disabled = true;
         const id = document.getElementById('project-id').value;
+
         const images = Array.from(document.querySelectorAll('.additional-image-url')).map((el, i) => ({
-            url: el.value,
-            description: document.querySelectorAll('.additional-image-desc')[i]?.value || ''
+            url: el.value.trim(),
+            description: document.querySelectorAll('.additional-image-desc')[i]?.value.trim() || ''
         })).filter(img => img.url);
-        const data = {
-            title: document.getElementById('project-title').value,
-            description: document.getElementById('project-description').value,
-            thumbnail: document.getElementById('project-thumbnail-url').value,
-            technologies: document.getElementById('project-tech').value.split(',').map(t => t.trim()).filter(Boolean),
-            sourceLink: document.getElementById('project-source-link').value,
-            liveLink: document.getElementById('project-live-link').value,
+
+        const platforms = Array.from(
+            document.querySelectorAll('#project-platform-selector .platform-checkbox:checked')
+        ).map(cb => cb.value);
+
+        const baseData = {
+            title:        document.getElementById('project-title').value.trim(),
+            description:  document.getElementById('project-description').value.trim(),
+            thumbnail:    document.getElementById('project-thumbnail-url').value.trim(),
+            technologies: document.getElementById('project-tech').value
+                              .split(',').map(t => t.trim()).filter(Boolean),
+            sourceLink:   document.getElementById('project-source-link').value.trim(),
+            liveLink:     document.getElementById('project-live-link').value.trim(),
+            platforms,   
             images,
-            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp(),
         };
+
+        if (!id) baseData.createdAt = serverTimestamp();
+
         try {
-            if (id) await setDoc(doc(db, 'projects', id), data, { merge: true });
-            else await addDoc(collection(db, 'projects'), data);
+            if (id) await setDoc(doc(db, 'projects', id), baseData, { merge: true });
+            else    await addDoc(collection(db, 'projects'), baseData);
             closeModal('project-modal');
             loadProjects();
-            showToast('Project saved!', 'success');
+            showToast('Project saved! 🚀', 'success');
         } catch (err) {
+            console.error('Project save error:', err);
             showToast('Error saving project.', 'error');
         } finally {
             document.getElementById('project-submit-text').textContent = 'Save Project';
@@ -1074,7 +1607,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Principle form
     document.getElementById('principle-form').addEventListener('submit', async e => {
         e.preventDefault();
         const id = document.getElementById('principle-id').value;
@@ -1093,7 +1625,6 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch { showToast('Error saving.', 'error'); }
     });
 
-    // Skill form
     document.getElementById('skill-form').addEventListener('submit', async e => {
         e.preventDefault();
         const id = document.getElementById('skill-id').value;
@@ -1110,7 +1641,6 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch { showToast('Error saving.', 'error'); }
     });
 
-    // About form
     document.getElementById('about-form').addEventListener('submit', async e => {
         e.preventDefault();
         const text = document.getElementById('about-modal-text').value;
@@ -1129,7 +1659,6 @@ document.addEventListener('DOMContentLoaded', () => {
         openModal('about-modal');
     });
 
-    // Testimonial submit
     document.getElementById('leave-feedback-btn').addEventListener('click', () => openModal('testimonial-modal'));
     document.getElementById('testimonial-form').addEventListener('submit', async e => {
         e.preventDefault();
@@ -1158,13 +1687,11 @@ document.addEventListener('DOMContentLoaded', () => {
         finally { btn.disabled = false; }
     });
 
-    // Add image button
     document.getElementById('add-image-btn').addEventListener('click', () => addImageRow());
     document.getElementById('additional-images-container').addEventListener('click', e => {
         if (e.target.closest('.remove-image-btn')) e.target.closest('.flex').remove();
     });
 
-    // Copy email
     document.getElementById('copy-email-btn').addEventListener('click', () => {
         const email = document.getElementById('email-text').textContent.trim();
         navigator.clipboard.writeText(email).then(() => {
@@ -1175,10 +1702,8 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Year
     document.getElementById('year').textContent = new Date().getFullYear();
 
-    // Scroll animations
     scrollObserver = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) entry.target.classList.add('is-visible');
@@ -1186,7 +1711,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }, { threshold: 0.08 });
     document.querySelectorAll('.animate-on-scroll').forEach(el => scrollObserver.observe(el));
 
-    // Custom cursor
     const cursorDot = document.querySelector('.cursor-dot');
     const cursorOutline = document.querySelector('.cursor-outline');
     const aboutSection = document.getElementById('about');
@@ -1228,13 +1752,12 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }, 1500);
 
-    // Parallax BG
     const bgLayer2 = document.getElementById('bg-layer-2');
     window.addEventListener('mousemove', (e) => {
         const x = Math.round((e.clientX / window.innerWidth) * 100);
         const y = Math.round((e.clientY / window.innerHeight) * 100);
-        const themeName = localStorage.getItem('portfolioTheme') || 'dark';
-        const theme = themes[themeName];
+        const tn = localStorage.getItem('portfolioTheme') || 'dark';
+        const theme = themes[tn];
         if (theme.bgLayer2.includes('radial-gradient')) {
             try {
                 const bgRule = theme.bgLayer2.match(/\[(.*?)\]/)[1].replace(/_/g, ' ');
@@ -1243,7 +1766,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Hero 3D tilt
     const heroSection = document.getElementById('hero');
     heroSection.addEventListener('mousemove', (e) => {
         const { clientX, clientY, currentTarget } = e;
@@ -1259,7 +1781,6 @@ document.addEventListener('DOMContentLoaded', () => {
         heroSection.querySelector('div').style.transition = 'transform 0.5s ease';
     });
 
-    // Code background
     (function initCodeBackground() {
         const container = document.getElementById('code-background');
         window.addEventListener('scroll', () => {
@@ -1298,19 +1819,16 @@ document.addEventListener('DOMContentLoaded', () => {
         setInterval(create, 1200);
     })();
 
-    // Edit buttons visibility for admin — show on hover, keep about btn always visible
     document.querySelectorAll('.edit-icon').forEach(btn => {
         const parent = btn.closest('.editable-container');
         if (parent) {
             parent.addEventListener('mouseenter', () => { if (isAdmin) btn.style.display = 'flex'; });
             parent.addEventListener('mouseleave', () => {
-                // Keep about-btn permanently visible for admin
                 if (btn.id !== 'edit-about-btn') btn.style.display = 'none';
             });
         }
     });
 
-    // Hero text edit
     document.getElementById('edit-hero-title-btn').addEventListener('click', () => {
         document.getElementById('text-edit-modal-title').textContent = 'Edit Name';
         document.getElementById('text-edit-doc').value = 'hero';
@@ -1339,11 +1857,15 @@ document.addEventListener('DOMContentLoaded', () => {
         } catch { showToast('Error saving.', 'error'); }
     });
 
-    // Add project/principle/skill buttons
     document.getElementById('add-project-btn').addEventListener('click', () => {
         document.getElementById('project-id').value = '';
         document.getElementById('project-form').reset();
         document.getElementById('additional-images-container').innerHTML = '';
+        document.querySelectorAll('#project-platform-selector .platform-checkbox').forEach(cb => {
+            cb.checked = false;
+            const badge = cb.nextElementSibling;
+            if (badge) badge.style.outline = '';
+        });
         document.getElementById('project-modal-title').innerText = 'Add New Project';
         openModal('project-modal');
     });
@@ -1361,10 +1883,8 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-// ── TIMELINE & STATS FORM HANDLERS (appended) ──────
 document.addEventListener('DOMContentLoaded', () => {
 
-    // Timeline
     const addTlBtn = document.getElementById('add-timeline-btn');
     if (addTlBtn) addTlBtn.addEventListener('click', () => {
         document.getElementById('timeline-id').value = '';
@@ -1385,7 +1905,6 @@ document.addEventListener('DOMContentLoaded', () => {
             tags:    document.getElementById('timeline-tags').value.split(',').map(t => t.trim()).filter(Boolean)
         };
         try {
-            // Static items (s1/s2/s3) don't exist in Firestore → create new doc
             const isStatic = ['s1','s2','s3'].includes(id);
             if (id && !isStatic) {
                 await setDoc(doc(db, 'timeline', id), data, { merge: true });
@@ -1405,7 +1924,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Stats
     const esBtn = document.getElementById('edit-stats-btn');
     if (esBtn) esBtn.addEventListener('click', () => {
         document.getElementById('stat-edit-years').value         = document.getElementById('stat-years')?.dataset.target || '2';
@@ -1443,3 +1961,354 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
+function openGlobalSettingsModal() {
+    const d = _cachedGlobalSettings || {};
+    const fill = (id, val) => { const el = document.getElementById(id); if (el) el.value = val || ''; };
+
+    fill('gs-cv-link',        d.cvLink        || '');
+    fill('gs-linkedin',       d.linkedin       || '');
+    fill('gs-github',         d.github         || '');
+    fill('gs-facebook',       d.facebook       || '');
+    fill('gs-contact-email',  d.contactEmail   || '');
+    fill('gs-phone',          d.phone          || '');
+    fill('gs-hero-subtitle',  d.heroSubtitle   || '');
+    fill('gs-about-img',      d.aboutImageUrl  || '');
+    fill('gs-footer-text',    d.footerText     || '');
+
+    feather.replace();
+    openModal('global-settings-modal');
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    const gsForm = document.getElementById('global-settings-form');
+    if (gsForm) {
+        gsForm.addEventListener('submit', async e => {
+        e.preventDefault();
+        const btn     = document.getElementById('gs-submit-btn');
+        const btnText = document.getElementById('gs-submit-text');
+        btnText.textContent = 'Saving...';
+        btn.disabled = true;
+
+        const data = {
+            cvLink:        (document.getElementById('gs-cv-link')?.value        || '').trim(),
+            linkedin:      (document.getElementById('gs-linkedin')?.value       || '').trim(),
+            github:        (document.getElementById('gs-github')?.value         || '').trim(),
+            facebook:      (document.getElementById('gs-facebook')?.value       || '').trim(),
+            contactEmail:  (document.getElementById('gs-contact-email')?.value  || '').trim(),
+            phone:         (document.getElementById('gs-phone')?.value          || '').trim(),
+            heroSubtitle:  (document.getElementById('gs-hero-subtitle')?.value  || '').trim(),
+            aboutImageUrl: (document.getElementById('gs-about-img')?.value      || '').trim(),
+            footerText:    (document.getElementById('gs-footer-text')?.value    || '').trim(),
+            updatedAt: serverTimestamp(),
+        };
+
+        const cleanData = Object.fromEntries(
+            Object.entries(data).filter(([, v]) => v !== '')
+        );
+
+        try {
+            await setDoc(doc(db, 'site_content', 'global_settings'), cleanData, { merge: true });
+
+            _cachedGlobalSettings = { ..._cachedGlobalSettings, ...cleanData };
+
+            applyGlobalSettings(_cachedGlobalSettings);
+
+            closeModal('global-settings-modal');
+            showToast('Settings saved! ✅', 'success');
+        } catch (err) {
+            showToast('Error saving settings.', 'error');
+            console.error('Global settings save error:', err);
+        } finally {
+            btnText.textContent = 'Save Settings';
+            btn.disabled = false;
+        }
+    });
+
+    let _proposalCategories = []; 
+    let _proposalItems = [];      
+    let _proposalsCache = [];     
+
+    const uid = () => Math.random().toString(36).slice(2, 10);
+
+    function proposalPublicUrl(id) {
+        return `${location.origin}${location.pathname.replace(/index\.html$/, '')}proposal.html?id=${id}`;
+    }
+
+    function themeInputClasses() {
+        const themeName = localStorage.getItem('portfolioTheme') || 'dark';
+        return themes[themeName].modalInput;
+    }
+
+  window.openAdminProposals = () => {
+    openModal('proposals-list-modal');
+    loadProposalsList();
+};
+
+    async function loadProposalsList() {
+        const container = document.getElementById('proposals-list-container');
+        container.innerHTML = `<p class="text-sm opacity-50 font-mono">Loading...</p>`;
+        let snap;
+        try { snap = await getDocs(query(collection(db, 'proposals'), orderBy('createdAt', 'desc'))); }
+        catch { snap = await getDocs(collection(db, 'proposals')); }
+
+        _proposalsCache = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+        if (_proposalsCache.length === 0) {
+            container.innerHTML = `<p class="text-sm opacity-50 font-mono text-center py-8">No proposals yet. Click "New Proposal" to create one.</p>`;
+            return;
+        }
+
+        container.innerHTML = _proposalsCache.map(p => {
+            const total = calcTotal(p, p.selections || {});
+            const locked = p.status === 'locked';
+            return `
+            <div class="rounded-xl border border-white border-opacity-10 p-4 flex flex-wrap items-center gap-3" data-proposal-row="${p.id}">
+                <div class="flex-grow min-w-[160px]">
+                    <p class="font-bold text-sm">${escapeHtml(p.clientName || '—')}</p>
+                    <p class="text-xs opacity-50">${escapeHtml(p.projectTitle || '')}</p>
+                </div>
+                <span class="text-xs font-mono px-2.5 py-1 rounded-lg ${locked ? 'bg-red-500/10 text-red-400' : 'bg-[#00f15e]/10 text-[#00f15e]'}">${locked ? 'LOCKED' : 'OPEN'}</span>
+                <span class="text-sm font-bold font-mono">${formatMoney(total, p.currency)}</span>
+                <div class="flex items-center gap-1.5">
+                    <button type="button" class="admin-btn edit-btn" data-action="copy-link" data-id="${p.id}" title="Copy client link"><i data-feather="link" class="w-3.5 h-3.5"></i></button>
+                    ${!locked ? `<button type="button" class="admin-btn edit-btn" data-action="edit" data-id="${p.id}" title="Edit"><i data-feather="edit-2" class="w-3.5 h-3.5"></i></button>` : ''}
+                    ${!locked ? `<button type="button" class="admin-btn" style="background:#f59e0b" data-action="lock" data-id="${p.id}" title="Lock now">🔒 Lock</button>` : ''}
+                    <button type="button" class="admin-btn edit-btn" data-action="pdf" data-id="${p.id}" title="Download PDF"><i data-feather="download" class="w-3.5 h-3.5"></i></button>
+                    <button type="button" class="admin-btn delete-btn" data-action="delete" data-id="${p.id}" title="Delete"><i data-feather="trash-2" class="w-3.5 h-3.5"></i></button>
+                </div>
+            </div>`;
+        }).join('');
+        feather.replace();
+    }
+
+    document.getElementById('proposals-list-container')?.addEventListener('click', async (e) => {
+        const btn = e.target.closest('button[data-action]');
+        if (!btn) return;
+        const { action, id } = btn.dataset;
+        const proposal = _proposalsCache.find(p => p.id === id);
+
+        if (action === 'copy-link') {
+            await navigator.clipboard.writeText(proposalPublicUrl(id));
+            showToast('Client link copied! 🔗', 'success');
+        } else if (action === 'edit') {
+            openProposalEditor(id);
+        } else if (action === 'lock') {
+            if (!confirm('متأكد إنك عايز تقفل العرض ده؟ العميل مش هيقدر يفتحه أو يعدله تاني، وهيتحمّله PDF لو كان فاتح الصفحة.')) return;
+            await updateDoc(doc(db, 'proposals', id), { status: 'locked', lockedAt: serverTimestamp() });
+            showToast('Proposal locked. 🔒', 'success');
+            loadProposalsList();
+        } else if (action === 'pdf') {
+            try {
+                showToast('Generating PDF...', 'info');
+                const fresh = (await getDoc(doc(db, 'proposals', id))).data();
+                await generateProposalPDF({ ...fresh }, fresh.selections || {});
+            } catch (err) {
+                console.error(err);
+                showToast('Could not generate PDF.', 'error');
+            }
+        } else if (action === 'delete') {
+            if (!confirm(`Delete the proposal for "${proposal?.clientName || ''}"? This cannot be undone.`)) return;
+            await deleteDoc(doc(db, 'proposals', id));
+            showToast('Proposal deleted.', 'info');
+            loadProposalsList();
+        }
+    });
+
+    document.getElementById('new-proposal-btn')?.addEventListener('click', () => openProposalEditor());
+
+    function openProposalEditor(id = null) {
+        document.getElementById('proposal-form').reset();
+        document.getElementById('proposal-id').value = id || '';
+        document.getElementById('proposal-link-box').classList.add('hidden');
+        document.getElementById('proposal-editor-title').textContent = id ? 'Edit Proposal' : 'New Proposal';
+
+        if (id) {
+            const p = _proposalsCache.find(x => x.id === id);
+            _proposalCategories = (p?.categories || []).map(c => ({ ...c }));
+            _proposalItems = (p?.items || []).map(i => ({ ...i }));
+            document.getElementById('proposal-client-name').value = p?.clientName || '';
+            document.getElementById('proposal-project-title').value = p?.projectTitle || '';
+            document.getElementById('proposal-currency').value = p?.currency || 'EGP';
+            document.getElementById('proposal-notes').value = p?.notes || '';
+            document.getElementById('proposal-link-box').classList.remove('hidden');
+            document.getElementById('proposal-link-input').value = proposalPublicUrl(id);
+        } else {
+            _proposalCategories = [
+                { id: uid(), name: 'الأساسيات' },
+                { id: uid(), name: 'إضافات متوسطة' },
+                { id: uid(), name: 'إضافات متقدمة' },
+            ];
+            _proposalItems = [];
+        }
+        renderProposalCategories();
+        renderProposalItems();
+        openModal('proposal-editor-modal');
+    }
+
+    function renderProposalCategories() {
+        const wrap = document.getElementById('proposal-categories-list');
+        const inputClasses = themeInputClasses();
+        wrap.innerHTML = _proposalCategories.map(cat => `
+            <div class="flex items-center gap-2" data-cat-id="${cat.id}">
+                <input type="text" class="modal-input ${inputClasses} p-2.5 rounded-xl flex-grow proposal-cat-name" value="${escapeHtml(cat.name)}" placeholder="Category name">
+                <button type="button" class="admin-btn delete-btn remove-cat-btn" title="Remove category"><i data-feather="x" class="w-3.5 h-3.5"></i></button>
+            </div>
+        `).join('') || `<p class="text-xs opacity-40 font-mono">No categories yet.</p>`;
+        feather.replace();
+
+        wrap.querySelectorAll('.proposal-cat-name').forEach(input => {
+            input.addEventListener('input', () => {
+                const catId = input.closest('[data-cat-id]').dataset.catId;
+                const cat = _proposalCategories.find(c => c.id === catId);
+                if (cat) cat.name = input.value;
+                refreshCategorySelectOptions();
+            });
+        });
+        wrap.querySelectorAll('.remove-cat-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const catId = btn.closest('[data-cat-id]').dataset.catId;
+                const hasItems = _proposalItems.some(i => i.categoryId === catId);
+                if (hasItems && !confirm('الفئة دي فيها عناصر — هتتشال هي والعناصر اللي جواها. متأكد؟')) return;
+                _proposalCategories = _proposalCategories.filter(c => c.id !== catId);
+                _proposalItems = _proposalItems.filter(i => i.categoryId !== catId);
+                renderProposalCategories();
+                renderProposalItems();
+            });
+        });
+    }
+
+    function refreshCategorySelectOptions() {
+        document.querySelectorAll('.proposal-item-category').forEach(select => {
+            const current = select.value;
+            select.innerHTML = _proposalCategories.map(c => `<option value="${c.id}">${escapeHtml(c.name)}</option>`).join('');
+            if (_proposalCategories.some(c => c.id === current)) select.value = current;
+        });
+    }
+
+    document.getElementById('add-category-btn')?.addEventListener('click', () => {
+        _proposalCategories.push({ id: uid(), name: '' });
+        renderProposalCategories();
+    });
+
+    function renderProposalItems() {
+        const wrap = document.getElementById('proposal-items-list');
+        const inputClasses = themeInputClasses();
+
+        if (_proposalCategories.length === 0) {
+            wrap.innerHTML = `<p class="text-xs opacity-40 font-mono">Add a category first.</p>`;
+            return;
+        }
+
+        wrap.innerHTML = _proposalItems.map(item => `
+            <div class="rounded-xl border border-white border-opacity-10 p-3 space-y-2" data-item-id="${item.id}">
+                <div class="flex gap-2">
+                    <select class="modal-input ${inputClasses} p-2 rounded-lg text-xs proposal-item-category" style="max-width:150px">
+                        ${_proposalCategories.map(c => `<option value="${c.id}" ${c.id === item.categoryId ? 'selected' : ''}>${escapeHtml(c.name)}</option>`).join('')}
+                    </select>
+                    <input type="text" class="modal-input ${inputClasses} p-2 rounded-lg flex-grow proposal-item-name" placeholder="اسم الميزة (مثال: بحث وفلترة)" value="${escapeHtml(item.name || '')}">
+                    <button type="button" class="admin-btn delete-btn remove-item-btn" title="Remove item"><i data-feather="x" class="w-3.5 h-3.5"></i></button>
+                </div>
+                <div>
+                    <input type="text" class="modal-input ${inputClasses} p-2 rounded-lg w-full text-sm proposal-item-desc" placeholder="شرح مبسط للعميل (مثال: فلترة المنتجات حسب المقاس واللون...)" value="${escapeHtml(item.description || '')}">
+                </div>
+                <div class="flex gap-2 flex-wrap">
+                    <input type="number" min="0" class="modal-input ${inputClasses} p-2 rounded-lg proposal-item-price" style="width:110px" placeholder="Price" value="${item.price ?? ''}">
+                    <select class="modal-input ${inputClasses} p-2 rounded-lg text-xs proposal-item-tier" style="width:130px">
+                        <option value="base" ${item.tier === 'base' ? 'selected' : ''}>أساسي (إجباري)</option>
+                        <option value="optional" ${item.tier !== 'base' ? 'selected' : ''}>إضافة اختيارية</option>
+                    </select>
+                    <select class="modal-input ${inputClasses} p-2 rounded-lg text-xs proposal-item-recurrence" style="width:130px">
+                        <option value="once" ${item.recurrence === 'once' || !item.recurrence ? 'selected' : ''}>تدفع مرة واحدة</option>
+                        <option value="monthly" ${item.recurrence === 'monthly' ? 'selected' : ''}>شهرياً</option>
+                        <option value="yearly" ${item.recurrence === 'yearly' ? 'selected' : ''}>سنوياً</option>
+                        <option value="custom" ${item.recurrence === 'custom' ? 'selected' : ''}>مخصص...</option>
+                    </select>
+                    <input type="text" class="modal-input ${inputClasses} p-2 rounded-lg flex-grow proposal-item-recurrence-note ${item.recurrence === 'custom' ? '' : 'hidden'}" placeholder="مثال: حسب الاستهلاك" value="${escapeHtml(item.recurrenceNote || '')}">
+                </div>
+            </div>
+        `).join('') || `<p class="text-xs opacity-40 font-mono">No items yet — click "+ Add Item".</p>`;
+        feather.replace();
+        wireItemRowEvents();
+    }
+
+    function wireItemRowEvents() {
+        document.querySelectorAll('#proposal-items-list [data-item-id]').forEach(row => {
+            const itemId = row.dataset.itemId;
+            const item = _proposalItems.find(i => i.id === itemId);
+            if (!item) return;
+
+            row.querySelector('.proposal-item-category')?.addEventListener('change', e => item.categoryId = e.target.value);
+            row.querySelector('.proposal-item-name')?.addEventListener('input', e => item.name = e.target.value);
+            row.querySelector('.proposal-item-desc')?.addEventListener('input', e => item.description = e.target.value);
+            row.querySelector('.proposal-item-price')?.addEventListener('input', e => item.price = parseFloat(e.target.value) || 0);
+            row.querySelector('.proposal-item-tier')?.addEventListener('change', e => item.tier = e.target.value);
+            row.querySelector('.proposal-item-recurrence')?.addEventListener('change', e => {
+                item.recurrence = e.target.value;
+                row.querySelector('.proposal-item-recurrence-note')?.classList.toggle('hidden', e.target.value !== 'custom');
+            });
+            row.querySelector('.proposal-item-recurrence-note')?.addEventListener('input', e => item.recurrenceNote = e.target.value);
+            row.querySelector('.remove-item-btn')?.addEventListener('click', () => {
+                _proposalItems = _proposalItems.filter(i => i.id !== itemId);
+                renderProposalItems();
+            });
+        });
+    }
+
+    document.getElementById('add-item-btn')?.addEventListener('click', () => {
+        if (_proposalCategories.length === 0) { showToast('Add a category first.', 'error'); return; }
+        _proposalItems.push({ id: uid(), categoryId: _proposalCategories[0].id, name: '', description: '', price: 0, tier: 'base', recurrence: 'once', recurrenceNote: '' });
+        renderProposalItems();
+    });
+
+    document.getElementById('copy-proposal-link-btn')?.addEventListener('click', async () => {
+        const link = document.getElementById('proposal-link-input').value;
+        if (!link) return;
+        await navigator.clipboard.writeText(link);
+        showToast('Client link copied! 🔗', 'success');
+    });
+
+    document.getElementById('proposal-form')?.addEventListener('submit', async e => {
+        e.preventDefault();
+        const btn = document.getElementById('proposal-submit-btn');
+        const btnText = document.getElementById('proposal-submit-text');
+        const id = document.getElementById('proposal-id').value;
+        btn.disabled = true;
+        btnText.textContent = 'Saving...';
+
+        const data = {
+            clientName: document.getElementById('proposal-client-name').value.trim(),
+            projectTitle: document.getElementById('proposal-project-title').value.trim(),
+            currency: document.getElementById('proposal-currency').value,
+            notes: document.getElementById('proposal-notes').value.trim(),
+            categories: _proposalCategories.filter(c => c.name.trim()),
+            items: _proposalItems.filter(i => i.name.trim()),
+        };
+
+        try {
+            let docId = id;
+            if (id) {
+                await updateDoc(doc(db, 'proposals', id), data);
+            } else {
+                const ref = await addDoc(collection(db, 'proposals'), {
+                    ...data,
+                    selections: {},
+                    status: 'open',
+                    createdAt: serverTimestamp(),
+                    lockedAt: null,
+                });
+                docId = ref.id;
+            }
+            document.getElementById('proposal-id').value = docId;
+            document.getElementById('proposal-link-box').classList.remove('hidden');
+            document.getElementById('proposal-link-input').value = proposalPublicUrl(docId);
+            showToast('Proposal saved! ✅', 'success');
+            loadProposalsList();
+        } catch (err) {
+            console.error('Proposal save error:', err);
+            showToast('Error saving proposal.', 'error');
+        } finally {
+            btn.disabled = false;
+            btnText.textContent = 'Save & Get Link';
+        }
+    });
+}});
